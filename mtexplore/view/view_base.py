@@ -30,6 +30,9 @@ class ViewContract:
     def get_figure(self) -> plt.Figure:
         return self.view.get_figure()
 
+    def set_figure(self,fig):
+        self.view.set_figure(fig)
+
     def configure(self):
         self.view.configure()
         self._configure()
@@ -60,19 +63,17 @@ class BaseView(ViewContract):
 
     def __init__(self,dimensions):
         super().__init__(None)
-        self.fig = plt.figure(figsize=dimensions)
-        self.fig.canvas.mpl_connect('key_press_event',self.test_event)
+
 
     def configure(self):
         pass
 
     def add_controller(self,controller):
-        controller.set_events(self.fig)
+        pass
 
-    def test_event(self,event):
-        print(event)
 
     def update(self):
+        print('updating')
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
@@ -83,6 +84,8 @@ class BaseView(ViewContract):
     def get_figure(self):
         return self.fig
 
+    def set_figure(self,fig):
+        self.fig = fig
+
     def finish(self):
-        print('showing fig')
         self.fig.canvas.draw()
