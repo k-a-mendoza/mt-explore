@@ -7,6 +7,7 @@ class DatabaseModel:
     def __init__(self,source_directory):
         self.source_directory = source_directory
         self.stations =None
+        self.stations_data = None
 
     def set_directory(self,source_directory):
         self.source_directory = source_directory
@@ -22,6 +23,12 @@ class DatabaseModel:
         else:
             return None
 
+    def get_name_loc_mt_dict(self):
+        if self.stations is not None:
+            return self.create_station_dict_mt_list()
+        else:
+            return None
+
     def create_station_dict_list(self):
         station_dict = {}
         for station in self.stations:
@@ -31,4 +38,15 @@ class DatabaseModel:
             key = station.Site.id
             latlon = (station.lat, station.lon)
             station_dict[survey][key] = latlon
+        return station_dict
+
+    def create_station_dict_mt_list(self):
+        station_dict = {}
+        for station in self.stations:
+            survey = station.Notes.info_dict['SURVEY']
+            if survey not in station_dict.keys():
+                station_dict[survey] = {}
+            key = station.Site.id
+            latlon = (station.lat, station.lon)
+            station_dict[survey][key] = (latlon, station)
         return station_dict

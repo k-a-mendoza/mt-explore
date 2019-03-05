@@ -7,7 +7,7 @@ import matplotlib.cm as colormap
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 class MapView(ViewContract):
-    map_position=[0.1,0.3,0.6,0.8]
+    map_position=[0.05,0.5,0.4,0.4]
     extent   = [-180,180,-90,90]
     colormap = colormap.get_cmap('hsv')
     s1 = 10

@@ -1,11 +1,13 @@
-from .view_base import BaseView, ViewContract
+from .view_base import BaseView
 from .map_view import MapView
+from .mt_view import MTView
 from ..controller.controller import MainController
 base_view_dimensions = (15,10)
 
 def get_view_stack():
-    return MapView(
-            BaseView(base_view_dimensions))
+    return MTView(
+            MapView(
+                BaseView(base_view_dimensions)))
 
 class MainView:
 
@@ -25,3 +27,6 @@ class MainView:
 
     def finish(self):
         self.view.finish()
+
+    def update(self):
+        self.view.update()
