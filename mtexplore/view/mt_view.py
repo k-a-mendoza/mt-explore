@@ -150,7 +150,7 @@ class Phase(_Format):
 
 class AppRes(_Format):
     fontsize = 12
-    weight='bold'
+    weight ='bold'
 
     def __init__(self):
         super().__init__()
