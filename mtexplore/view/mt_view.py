@@ -27,13 +27,15 @@ class MTView(ViewContract):
         ax1.get_shared_x_axes().join(ax1,ax2)
         ax1.set_xlim([1e-4, 1e4])
         ax1.tick_params(axis='x',which='major',  length=10, grid_linewidth=3,grid_linestyle='-')
-        ax2.tick_params(axis='x', which='major', length=10, grid_linewidth=3, grid_linestyle='-')
+        ax2.tick_params(axis='x', which='major', length=10, grid_linewidth=3,grid_linestyle='-')
         ax1.tick_params(axis='x', which='minor', length=7, grid_linewidth=3, grid_linestyle='--')
         ax2.tick_params(axis='x', which='minor', length=7, grid_linewidth=3, grid_linestyle='--')
         ax1.get_xaxis().set_major_formatter(ScalarFormatter())
         self.app_res.configure(ax1)
         self.phase.configure(ax2)
         ax1.loglog()
+
+
 class _Format():
     yx_marker='o'
     xy_marker='s'
@@ -82,15 +84,11 @@ class Phase(_Format):
         Z_tensor = mt_obj.Z
         frequencies = 1.0 / Z_tensor.freq
 
-        phase_xx = mt_obj.Z.phase_xx
-        phase_yy = mt_obj.Z.phase_yy
-        phase_xy = mt_obj.Z.phase_xy
-        phase_yx = mt_obj.Z.phase_yx
+        phase_xx,     phase_xy,     phase_yx,     phase_yy     = self.phase_extraction(mt_obj)
+        phase_xx_err, phase_xy_err, phase_yx_err, phase_yy_err = self.phase_err_extraction(mt_obj)
 
-        phase_xx_err = mt_obj.Z.phase_err_xx
-        phase_yy_err = mt_obj.Z.phase_err_yy
-        phase_xy_err = mt_obj.Z.phase_err_xy
-        phase_yx_err = mt_obj.Z.phase_err_yx
+        self.ax.set_xlim([log_cast(0.1, min(frequencies[np.nonzero(phase_xx)])),
+                          log_cast(10 , max(frequencies[np.nonzero(phase_xx)]))])
 
         self.plot.append(self.ax.errorbar(get_nonzero_array(frequencies, phase_xx),
                                           get_nonzero_array(phase_xx, phase_xx),
@@ -148,6 +146,21 @@ class Phase(_Format):
                                           capsize=self.marker_size,
                                           capthick=self.lw, label='res_yx'))
 
+    def phase_extraction(self, mt_obj):
+        phase_xx = mt_obj.Z.phase_xx
+        phase_yy = mt_obj.Z.phase_yy
+        phase_xy = mt_obj.Z.phase_xy
+        phase_yx = mt_obj.Z.phase_yx
+        return phase_xx, phase_xy, phase_yx, phase_yy
+
+    def phase_err_extraction(self, mt_obj):
+        phase_xx_err = mt_obj.Z.phase_err_xx
+        phase_yy_err = mt_obj.Z.phase_err_yy
+        phase_xy_err = mt_obj.Z.phase_err_xy
+        phase_yx_err = mt_obj.Z.phase_err_yx
+        return phase_xx_err, phase_xy_err, phase_yx_err, phase_yy_err
+
+
 class AppRes(_Format):
     fontsize = 12
     weight ='bold'
@@ -181,78 +194,72 @@ class AppRes(_Format):
         frequencies = 1.0/ Z_tensor.freq
         self.ax.set_xlim([min(frequencies),max(frequencies)])
 
-        res_xx = mt_obj.Z.res_xx
-        res_yy = mt_obj.Z.res_yy
-        res_xy = mt_obj.Z.res_xy
-        res_yx = mt_obj.Z.res_yx
+        res_xx,     res_xy,     res_yx,     res_yy     = self.res_extract(mt_obj)
+        res_xx_err, res_xy_err, res_yx_err, res_yy_err = self.res_err_extract(mt_obj)
 
+        max_yval =  get_max_value(res_xx, res_xy, res_yx, res_yy)
+        min_yval = -get_max_value(-res_xx, -res_xy, -res_yx, -res_yy)
+        self.ax.set_ylim([log_cast(0.1,min_yval),log_cast(10,max_yval)])
+
+        self.plot_series(frequencies, res_xx, res_xx_err,
+                         self.xy_marker,self.xx_color,
+                         self.xx_color,self.xx_color,self.xx_ls,r'$\rho_{xx}$')
+
+        self.plot_series(frequencies, res_xy, res_xy_err,
+                         self.xy_marker, self.xy_color,
+                         self.xy_color, self.xy_color, self.xy_ls,r'$\rho_{xy}$')
+
+        self.plot_series(frequencies, res_yy, res_yy_err,
+                         self.yy_marker, self.yy_color,
+                         self.yy_color, self.yy_color, self.yy_ls,r'$\rho_{yy}$')
+
+        self.plot_series(frequencies, res_yx, res_yx_err,
+                         self.yx_marker, self.yx_color,
+                         self.yx_color, self.yx_color, self.yx_ls,r'$\rho_{yx}$')
+
+        if not self.legend:
+            self.legend=self.ax.legend(loc='upper right')
+
+    def plot_series(self, frequencies, res_xx, res_xx_err,
+                            marker, mec, color, ecolor, ls, label):
+
+        plot_obj=self.ax.errorbar(get_nonzero_array(frequencies, res_xx),
+                                          get_nonzero_array(res_xx, res_xx),
+                                          marker=marker,
+                                          ms=self.marker_size,
+                                          mew=self.lw,
+                                          mec=mec,
+                                          color=color,
+                                          ecolor=ecolor,
+                                          ls=ls,
+                                          lw=self.lw,
+                                          yerr=get_nonzero_array(res_xx_err, res_xx),
+                                          capsize=self.marker_size,
+                                          capthick=self.lw, label=label)
+        self.plot.append(plot_obj)
+
+    def res_err_extract(self, mt_obj):
         res_xx_err = mt_obj.Z.res_err_xx
         res_yy_err = mt_obj.Z.res_err_yy
         res_xy_err = mt_obj.Z.res_err_xy
         res_yx_err = mt_obj.Z.res_err_yx
+        return res_xx_err, res_xy_err, res_yx_err, res_yy_err
 
-        max_yval = max([max(res_xx), max(res_xy), max(res_yy), max(res_yx)])
-        if max_yval > 1e3:
-            self.ax.set_ylim(1e-1,np.power(10,int(np.log10(max_yval)*1.5)))
+    def res_extract(self, mt_obj):
+        res_xx = mt_obj.Z.res_xx
+        res_yy = mt_obj.Z.res_yy
+        res_xy = mt_obj.Z.res_xy
+        res_yx = mt_obj.Z.res_yx
+        return res_xx, res_xy, res_yx, res_yy
 
-        self.plot.append(self.ax.errorbar(get_nonzero_array(frequencies,res_xx),
-                                       get_nonzero_array(res_xx,res_xx),
-                                       marker=self.xy_marker,
-                                       ms=self.marker_size,
-                                       mew=self.lw,
-                                       mec=self.xx_color,
-                                       color=self.xx_color,
-                                       ecolor=self.xx_color,
-                                       ls=self.xx_ls,
-                                       lw=self.lw,
-                                       yerr=get_nonzero_array(res_xx_err,res_xx),
-                                       capsize=self.marker_size,
-                                       capthick=self.lw,label='res_xx'))
 
-        self.plot.append(self.ax.errorbar(get_nonzero_array(frequencies, res_xy),
-                         get_nonzero_array(res_xy, res_xy),
-                         marker=self.xy_marker,
-                         ms=self.marker_size,
-                         mew=self.lw,
-                         mec=self.xy_color,
-                         color=self.xy_color,
-                         ecolor=self.xy_color,
-                         ls=self.xy_ls,
-                         lw=self.lw,
-                         yerr=get_nonzero_array(res_xy_err, res_xy),
-                         capsize=self.marker_size,
-                         capthick=self.lw,label='res_xy'))
+def get_max_value(res_xx, res_xy, res_yx, res_yy):
+    return max([max(res_xx), max(res_xy), max(res_yy), max(res_yx)])
 
-        self.plot.append(self.ax.errorbar(get_nonzero_array(frequencies, res_yy),
-                         get_nonzero_array(res_yy, res_yy),
-                         marker=self.yy_marker,
-                         ms=self.marker_size,
-                         mew=self.lw,
-                         mec=self.yy_color,
-                         color=self.yy_color,
-                         ecolor=self.yy_color,
-                         ls=self.yy_ls,
-                         lw=self.lw,
-                         yerr=get_nonzero_array(res_yy_err, res_yy),
-                         capsize=self.marker_size,
-                         capthick=self.lw,label='res_yy'))
 
-        self.plot.append(self.ax.errorbar(get_nonzero_array(frequencies, res_yx),
-                         get_nonzero_array(res_yx, res_yx),
-                         marker=self.yx_marker,
-                         ms=self.marker_size,
-                         mew=self.lw,
-                         mec=self.yx_color,
-                         color=self.yx_color,
-                         ecolor=self.yx_color,
-                         ls=self.yx_ls,
-                         lw=self.lw,
-                         yerr=get_nonzero_array(res_yx_err, res_yx),
-                         capsize=self.marker_size,
-                         capthick=self.lw,label='res_yx'))
+def log_cast(multiplier,value):
+    return np.power(10.0,int(np.log10(value*multiplier)))
 
-        if not self.legend:
-            self.legend=self.ax.legend(loc='upper right')
 
 def get_nonzero_array(target, source):
     nonzero_array = np.nonzero(source)
