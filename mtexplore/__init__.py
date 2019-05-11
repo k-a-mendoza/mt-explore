@@ -1,1 +1,1 @@
-from .main import Main
+from mtexplore.main import Main

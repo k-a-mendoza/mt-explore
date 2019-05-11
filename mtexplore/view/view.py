@@ -1,7 +1,7 @@
-from .view_base import BaseView
-from .map_view import MapView
-from .mt_view import MTView
-from ..controller.controller import MainController
+from mtexplore.view.view_base import BaseView
+from mtexplore.view.map_view import MapView
+from mtexplore.view.mt_view import MTView
+
 base_view_dimensions = (15,10)
 
 def get_view_stack():
@@ -14,9 +14,8 @@ class MainView:
     def __init__(self):
         self.view  = get_view_stack()
 
-    def add_controller(self, controller: MainController):
-        self.view.add_controller(controller)
-        controller.add_view_base(self)
+    def get_view(self):
+        return self.view
 
     def start(self):
         self.view.configure()

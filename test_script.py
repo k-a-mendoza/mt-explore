@@ -2,10 +2,10 @@ from mtexplore import Main
 
 # try this
 def main():
-    main_app = Main()
-    main_app.connect_database('../../Desktop/MT Data/Earthscope')
+    main_app = Main(debug=False)
+    main_app.connect_database('../../Desktop/MT Data/Database/')
     return main_app
 
 
-if __name__=='__main__':
-    main()
+
+main_app = main()

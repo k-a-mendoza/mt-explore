@@ -1,78 +1,72 @@
-from ..model.model import  Model
 
-class MapController:
+import numpy as np
+from controller.controller_abstracts import ControllerInterface
 
-    def __init__(self):
-        self.gen_ended = True
+class MapController(ControllerInterface):
 
-    def button_press_event(self,event):
-        print(event)
+    click_range = 1/100
 
-    def key_press_event(self,event):
-        print(event)
-        if event.key =='r':
-            self.update_all_stations()
-        elif event.key=='n':
-            self.update_selection()
+    def __init__(self,controller):
+        super().__init__(controller)
+        self.pressed  = False
+        self.location = None
 
-    def add_model(self, model: Model):
-        self._model = model.get_database_model()
+    def _key_press_event(self,event):
+        if event.key=='h':
+            title = "Map Selection Functionality"
+            functionality = {
+                'select individual station': 'click',
+                'select station group': 'click and drag'
+            }
+            self.create_help_menu_string(title, functionality)
 
-    def _update_all_stations(self,*args,**kwargs):
-        pass
+    def _update(self):
+        data = self.model.get_mapping_data()
+        self.view.map(data)
 
-    def _update_extent(self,*args,**kwargs):
-        pass
+    def _button_release_event(self, event):
+        axes_label = self.view.get_axes_of_click(event)
 
-    def _update_selection(self,*args,**kwargs):
-        pass
+        if axes_label == 'map' and self.pressed:
 
-    def update(self):
-        pass
+            lat, lon = event.ydata, event.xdata
+            other_loc= np.asarray((lat, lon))
+            norm = np.linalg.norm(self.location-other_loc)
 
-    def update_all_stations(self,*args,**kwargs):
-        station_dict = self._model.get_name_loc_dict()
-        if station_dict is not None:
-            self._update_all_stations(stations=station_dict)
-            extent = self._get_extent(station_dict)
-            self._update_extent(extent=extent)
-        self.update()
+            if norm > 0.2:
+                extent = [self.location[0],lat,self.location[1],lon]
+                self.model.create_selection_cycler(extent=extent)
+                selection = self.model.get_selection()
+                self.set_selection(selection)
 
-    def update_selection(self):
-        selection = self.next_selection()
-        self._update_selection(selection)
-        self.update()
+            else:
+                radius = self.get_radius()
+                selection = self.model.get_clicked_selection(lat, lon, radius)
+                self.set_selection(selection)
 
-    def _get_extent(self,dict_of_dicts):
-        x_values = []
-        y_values = []
-        for survey in dict_of_dicts.keys():
-            for station,latlon in dict_of_dicts[survey].items():
-                x_values.append(latlon[1])
-                y_values.append(latlon[0])
+            self.location=None
+            self.pressed=False
 
-        x_min = min(x_values)
-        x_max = max(x_values)
-        y_min = min(y_values)
-        y_max = max(y_values)
-        extent = [x_min, x_max, y_min, y_max]
-        return extent
+    def set_selection(self, selection):
+        if selection is not None:
+            self.view.update_selection(selection)
 
-    def next_selection(self):
-        if self.gen_ended:
-            self.new_generator = self.station_generator()
-            self.gen_ended=False
-        next_item = next(self.new_generator)
-        if next_item is False:
-            self.gen_ended = True
-            return self.next_selection()
-        else:
-            return next_item
+    def get_radius(self):
+        extent = self.view.get_extent()
+        xlim = extent[0]
+        ylim = extent[1]
+        xrange = xlim[0] - xlim[1]
+        yrange = ylim[0] - ylim[1]
+        avg   = (abs(xrange) + abs(yrange))/2.0
+        radius = avg * self.click_range
+        return radius
 
-    def station_generator(self):
-        station_dict = self._model.get_name_loc_dict()
-        for survey in station_dict.keys():
-            for station, location in station_dict[survey].items():
-                yield survey, station, location
-        yield False
+    def _button_press_event(self, event):
+        axes_label = self.view.get_axes_of_click(event)
+        if axes_label == 'map':
+            lat, lon = event.ydata, event.xdata
+            self.pressed  = True
+            self.location = np.asarray((lat,lon))
+
+
 

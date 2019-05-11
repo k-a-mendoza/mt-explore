@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import pandas as pd
 
 class ViewContract:
 
@@ -9,11 +9,11 @@ class ViewContract:
     def add_axes(self,*args,**kwargs):
         return self.view.add_axes(*args,**kwargs)
 
-    def add_controller(self,controller):
-        self._add_controller(controller)
-        self.view.add_controller(controller)
+    def map(self,df: pd.DataFrame):
+        self._map(df)
+        self.view.map(df)
 
-    def _add_controller(self,controller):
+    def _map(self,df):
         pass
 
     def update(self):
@@ -27,6 +27,20 @@ class ViewContract:
     def _finish(self):
         pass
 
+    def get_axes_of_click(self,event):
+        in_axes = self._is_in_axes(event)
+        if in_axes is None:
+            return self.view.get_axes_of_click(event)
+        else:
+            return in_axes
+
+    def update_selection(self,series):
+        self._update_selection(series)
+        self.view.update_selection(series)
+
+    def _update_selection(self,series):
+        pass
+
     def get_figure(self) -> plt.Figure:
         return self.view.get_figure()
 
@@ -36,6 +50,15 @@ class ViewContract:
     def configure(self):
         self.view.configure()
         self._configure()
+
+    def get_extent(self):
+        extent = self._get_extent()
+        if extent is None:
+            return self.view.get_extent()
+        return extent
+
+    def _get_extent(self):
+        return None
 
     def _configure(self):
         pass
@@ -59,6 +82,9 @@ class ViewContract:
         """
         return self.view.get_axes(*args,**kwargs)
 
+    def _is_in_axes(self, event):
+        pass
+
 class BaseView(ViewContract):
 
     def __init__(self,dimensions):
@@ -68,15 +94,9 @@ class BaseView(ViewContract):
     def configure(self):
         pass
 
-    def add_controller(self,controller):
-        pass
-
-
     def update(self):
-        print('updating')
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-
 
     def add_axes(self, *args, **kwargs):
         return self.fig.add_axes(*args, **kwargs)
@@ -87,5 +107,14 @@ class BaseView(ViewContract):
     def set_figure(self,fig):
         self.fig = fig
 
+    def map(self,df):
+        pass
+
     def finish(self):
         self.fig.canvas.draw()
+
+    def update_selection(self, series):
+        self.update()
+
+    def _is_in_axes(self, event):
+        return 'background'

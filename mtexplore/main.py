@@ -1,19 +1,24 @@
-from .model.model import Model
-from .view.view import MainView
-from .controller.controller import MainController
-import matplotlib.pyplot as plt
+import os
+import sys
+sys.path.append(os.getcwd()+os.sep +'mtexplore')
+from model.model import Model
+from model import mt_py_facade
+from view.view import MainView
+from controller.controller import MainController
+
+
+
 class Main:
 
-    def __init__(self,**kwargs):
+    def __init__(self,debug=False,**kwargs):
+        mt_facade=mt_py_facade.MtFacade(debug)
         self.controller = MainController()
-        self.model = Model(**kwargs)
+        self.model = Model(mt_facade=mt_facade,**kwargs)
         self.view  = MainView()
-        self.view.set_figure(self.controller.get_figure())
-
-        self.view.add_controller(self.controller)
+        self.controller.add_view_base(self.view)
         self.controller.add_model(self.model)
         self.controller.start()
 
     def connect_database(self,database_directory):
         self.model.get_database_model().set_directory(database_directory)
-        self.controller.update_all_stations()
+        self.controller.update()
