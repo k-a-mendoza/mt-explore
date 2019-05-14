@@ -35,6 +35,8 @@ class MapView(ViewContract):
         super().__init__(view)
         self.selection_id=None
         self.selection_handle=None
+        self.scatter_handle = None
+        self.legend = None
         self._surveys=[]
 
     def colormap(self,val):
@@ -57,12 +59,18 @@ class MapView(ViewContract):
         survey = station_data['survey']
         id     = station_data['station id']
 
-        scatter_handle = self.ax.scatter(station_data['longitude'],station_data['latitude'],**self._selection_kwargs)
+        self.selection_handle = self.ax.scatter(station_data['longitude'],station_data['latitude'],**self._selection_kwargs)
         self.ax.set_title('Survey: {}, Station: {}'.format(survey,id))
-        self.selection_handle = scatter_handle
 
     def _erase_selection(self):
         self.selection_handle.remove()
+        del self.selection_handle
+        self.selection_handle=None
+
+    def _erase_scatter(self):
+        self.scatter_handle.remove()
+        del self.scatter_handle
+        self.scatter_handle=None
 
     def _is_in_axes(self, event):
         x,y = event.x, event.y
@@ -74,7 +82,9 @@ class MapView(ViewContract):
     def map(self,df):
         if not df.empty:
             df = self.assign_survey_colors(df)
-            self.ax.scatter(df['longitude'],df['latitude'],edgecolors=df['color'],c=df['qual color'],**self._scatter_kwargs)
+            if self.scatter_handle is not None:
+                self._erase_scatter()
+            self.scatter_handle=self.ax.scatter(df['longitude'],df['latitude'],edgecolors=df['color'],c=df['qual color'],**self._scatter_kwargs)
             self._check_legend(df)
             self.update_extent(df)
 
@@ -93,24 +103,23 @@ class MapView(ViewContract):
             df.at[df['survey']==key,'color']=value
         df.at[df['include'] == 0, 'qual color'] = self._none_color
         df.at[df['include'] == 1, 'qual color'] = self._include
-
         return df
 
     def _check_legend(self,df):
         items = collections.Counter(df['survey'].unique())
-        to_check = collections.Counter(self._surveys)
-        if items != to_check:
-            if self.ax.get_legend() is not None:
-                self.ax.get_legend().remove()
-            for ix, survey in enumerate(items):
-                color = self.colormap(ix / len(items))
-                self.ax.scatter([], [], label=survey, edgecolors=color, c='none', s=self.s1,linewidths=self.lw)
+        if self.legend is not None:
+            self.legend.remove()
+        handles=[]
+        for ix, survey in enumerate(items):
+            color = self.colormap(ix / len(items))
+            handle = self.ax.scatter([], [], label=survey, edgecolors=color, c='none', s=self.s1,linewidths=self.lw)
+            handles.append(handle)
 
-            self.ax.scatter([], [], label='exclude station',  edgecolors='black',   c=self._none_color)
-            self.ax.scatter([], [], label='include station', edgecolors='black', c=self._include)
-            ncols = int((len(items)+3)/3)
-            self.ax.legend(ncol=ncols,loc='lower left')
-            self._surveys=df['survey'].unique()
+        self.ax.scatter([], [], label='exclude station',  edgecolors='black',   c=self._none_color)
+        self.ax.scatter([], [], label='include station', edgecolors='black', c=self._include)
+        ncols = int((len(items)+3)/3)
+        self.legend=self.ax.legend(handles,items,ncol=ncols,loc='lower left')
+
 
     def update_extent(self,df):
         extent = [x for x in self.extent]

@@ -34,16 +34,22 @@ class MapController(ControllerInterface):
             norm = np.linalg.norm(self.location-other_loc)
 
             if norm > 0.2:
-                extent = [self.location[0],lat,self.location[1],lon]
+                extent = {'latitude':  [self.location[0],lat],
+                          'longitude':[self.location[1],lon]
+                          }
                 self.model.create_selection_cycler(extent=extent)
                 selection = self.model.get_selection()
                 self.set_selection(selection)
 
             else:
                 radius = self.get_radius()
-                selection = self.model.get_clicked_selection(lat, lon, radius)
-                self.set_selection(selection)
+                extent = {'latitude':  [lat-radius, lat+radius],
+                          'longitude': [lon-radius, lon+radius]
+                          }
 
+            self.model.create_selection_cycler(extent=extent)
+            selection = self.model.get_selection()
+            self.set_selection(selection)
             self.location=None
             self.pressed=False
 

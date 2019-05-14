@@ -1,5 +1,5 @@
 from view.view_base import ViewContract
-from model.model import DatabaseModel
+from model.modelcontroller import ModelController
 
 
 class ControllerInterface:
@@ -24,7 +24,7 @@ class ControllerInterface:
         self._connect_view(view)
         self.controller.connect_view(view)
 
-    def connect_model(self,model: DatabaseModel):
+    def connect_model(self, model: ModelController):
         self._connect_model(model)
         self.controller.connect_model(model)
 
@@ -48,6 +48,10 @@ class ControllerInterface:
         self._key_press_event(event)
         self.controller.key_press_event(event)
 
+    def key_release_event(self, event):
+        self._key_release_event(event)
+        self.controller.key_release_event(event)
+
     def update(self):
         self._update()
         self.controller.update()
@@ -55,7 +59,7 @@ class ControllerInterface:
     def _connect_view(self, view: ViewContract):
         self.view = view
 
-    def _connect_model(self, model: DatabaseModel):
+    def _connect_model(self, model: ModelController):
         self.model = model
 
     def _update(self):
@@ -68,6 +72,9 @@ class ControllerInterface:
         pass
 
     def _key_press_event(self,event):
+        pass
+
+    def _key_release_event(self,event):
         pass
 
     def _button_press_event(self, event):
@@ -85,7 +92,7 @@ class ControllerBase(ControllerInterface):
     def connect_view(self, view: ViewContract):
         pass
 
-    def connect_model(self, model: DatabaseModel):
+    def connect_model(self, model: ModelController):
         pass
 
     def button_press_event(self, event):
@@ -104,4 +111,7 @@ class ControllerBase(ControllerInterface):
         pass
 
     def key_press_event(self, event):
+        pass
+
+    def key_release_event(self, event):
         pass
