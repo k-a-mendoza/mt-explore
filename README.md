@@ -1,4 +1,4 @@
-# MT Explore
+
 ![alt text](https://github.com/El-minadero/mt-explore/blob/master/images/social_card_modified.png)
 
 MT-Explore is a GUI meant to assist in the compilation of datasets for MT inversion.
@@ -34,6 +34,7 @@ main_app.connect_database('MT Data/')
 
 ```
 ![alt text](https://github.com/El-minadero/mt-explore/blob/master/images/CAY202.png)
+
 You should see a window pop up with a map view and associated phase/apparent resistivity plot. It is possible to interact with the data using the mouse or specific keys. For a full list of commands press 'h'
 
 Mt Explore assumes the point of this data exploration is to identify stations with strategic location and data quality important to your study area. Ultimately, stations are either included, or excluded from the dataset. To include stations, press 'i'. Similarly stations are excluded by pressing 'o'. 
