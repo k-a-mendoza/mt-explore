@@ -3,20 +3,20 @@
 MT-Explore is a GUI meant to assist in the compilation of datasets for MT inversion.
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install MT-Explore.
 
 ```bash
-pip install foobar
+pip install mtexplore
 ```
 
 ## Usage
 
 ```python
-import foobar
+from mtexplore import MtMain
 
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
+main_app = MtMain()
+main_app.connect_database('MT Data/')
+
 ```
 
 ## Contributing
@@ -25,4 +25,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 Please make sure to update tests as appropriate.
 
 ## License
-[MIT](https://choosealicense.com/licenses/mit/)
+[GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/)
