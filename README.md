@@ -46,4 +46,4 @@ Please make sure to update tests as appropriate.
 
 ## Citation
 
-At this time I dont ask that you use an official citation of MT-Explore, but if is helpful in class projects, publications, training, surveys, or any other endeavor, I would appreciate an acknowledgement. Something like [Mendoza, K; Mt-Explore 2019](https://github.com/El-minadero/mt-explore.git) could be appropriate.
+At this time I dont ask that you use an official citation of MT-Explore, but if it is helpful in class projects, publications, training, surveys, or any other endeavor, I would appreciate an acknowledgement. Something like [Mendoza, K; Mt-Explore 2019](https://github.com/El-minadero/mt-explore.git) could be appropriate.
