@@ -10,13 +10,19 @@ MT-Explore is a GUI meant to assist in the compilation of datasets for MT invers
 MT-Explore would not be possible without the hard and extensive work by the Cartopy and MtPy team. If you deal with location plotting or Magnetotelluric data, I suggest you check out their packages:
 
 [mtpy](https://github.com/MTgeophysics/mtpy)
+
 [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
 
 MT-Explore also leverages numpy, pandas, matplotlib, and tk. 
 
 ## Installation
+Because of the way things are, for version 0.0.4, you'll have to do a 2 part install, one with anaconda and one with pip.
+First, install cartopy using anaconda:
+```bash
+conda install cartopy
+```
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install MT-Explore.
+Then use the package manager [pip](https://pip.pypa.io/en/stable/) to install MT-Explore.
 
 ```bash
 pip install mtexplore
@@ -33,7 +39,7 @@ main_app = Mt_Ex_Main()
 main_app.connect_database('MT Data/')
 
 ```
-![Mt-Explore-example](https://github.com/El-minadero/mt-explore/master/images/CAY202.png)
+![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/ex.png)
 
 You should see a window pop up with a map view and associated phase/apparent resistivity plot. It is possible to interact with the data using the mouse or specific keys. For a full list of commands press 'h'
 
