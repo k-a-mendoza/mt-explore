@@ -2,6 +2,8 @@
 
 MT-Explore is a GUI meant to assist in the compilation of datasets for MT inversion.
 
+
+
 ## Acknowledgements
 
 MT-Explore would not be possible without the hard and extensive work by the Cartopy and MtPy team. If you deal with location plotting or Magnetotelluric data, I suggest you check out their packages:
