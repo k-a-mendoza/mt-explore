@@ -40,6 +40,11 @@ Mt Explore assumes the point of this data exploration is to identify stations wi
 
 The incldue/exclude metadata is exported as a pandas dataframe via the load-save commands in .csv format for later data manipulation. This exported dataframe does not contain the transfer function information from the .edi files, but only the location on disk for each station. 
 
+## Known Issues
+There are a few cosmetic issues that I probably wont fix as they dont impact the usability of MT-Explore. However, if you know how to fix them feel free to submit a pull request.
+
+By overriding some of the key bindings of Matplotlib, a few unexpected plot and map behaviors were introduced. If things mess up just kill the plot window and instantiate the Main object again. 
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
