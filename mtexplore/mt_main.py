@@ -8,7 +8,7 @@ from controller.controller import MainController
 
 
 
-class MtMain:
+class Mt_Ex_Main:
 
     def __init__(self,debug=False,**kwargs):
         mt_facade=mt_py_facade.MtFacade(debug)
