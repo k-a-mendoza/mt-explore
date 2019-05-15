@@ -115,8 +115,8 @@ class MapView(ViewContract):
             handle = self.ax.scatter([], [], label=survey, edgecolors=color, c='none', s=self.s1,linewidths=self.lw)
             handles.append(handle)
 
-        self.ax.scatter([], [], label='exclude station',  edgecolors='black',   c=self._none_color)
-        self.ax.scatter([], [], label='include station', edgecolors='black', c=self._include)
+        handles.append(self.ax.scatter([], [], label='exclude station',  edgecolors='black',   c=self._none_color))
+        handles.append(self.ax.scatter([], [], label='include station', edgecolors='black', c=self._include))
         ncols = int((len(items)+3)/3)
         self.legend=self.ax.legend(handles,items,ncol=ncols,loc='lower left')
 
