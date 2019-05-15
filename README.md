@@ -30,7 +30,7 @@ pip install mtexplore
 
 ## Usage
 
-First, create an Mt_Ex_Main Object
+First, create an Mt_Ex_Main Object and link it with your local .edi database directory.
 
 ```python
 from mtexplore import Mt_Ex_Main
