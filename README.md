@@ -10,6 +10,7 @@ MT-Explore is a GUI meant to assist in the compilation of datasets for MT invers
 MT-Explore would not be possible without the hard and extensive work by the Cartopy and MtPy team. If you deal with location plotting or Magnetotelluric data, I suggest you check out their packages:
 
 [mtpy](https://github.com/MTgeophysics/mtpy)
+
 [cartopy](https://scitools.org.uk/cartopy/docs/latest/)
 
 MT-Explore also leverages numpy, pandas, matplotlib, and tk. 
