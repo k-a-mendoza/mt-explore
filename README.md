@@ -15,8 +15,13 @@ MT-Explore would not be possible without the hard and extensive work by the Cart
 MT-Explore also leverages numpy, pandas, matplotlib, and tk. 
 
 ## Installation
+Because of the way things are, for version 0.0.4, you'll have to do a 2 part install, one with anaconda and one with pip.
+First, install cartopy using anaconda:
+```bash
+conda install cartopy
+```
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install MT-Explore.
+Then use the package manager [pip](https://pip.pypa.io/en/stable/) to install MT-Explore.
 
 ```bash
 pip install mtexplore
