@@ -62,6 +62,10 @@ Please make sure to update tests as appropriate.
 ## License
 [GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/)
 
-## Citation
+## Attribution
+
+If you use this package, please cite [mtpy](https://github.com/MTgeophysics/mtpy) and [cartopy](https://scitools.org.uk/cartopy/docs/latest/). Much of the functionality of this package comes from their work. 
 
 At this time I dont ask that you use an official citation of MT-Explore, but if it is helpful in class projects, publications, training, surveys, or any other endeavor, I would appreciate an acknowledgement. Something like [Mendoza, K; Mt-Explore 2019](https://github.com/El-minadero/mt-explore.git) could be appropriate.
+
+
