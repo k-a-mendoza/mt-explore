@@ -1,4 +1,5 @@
-# MT Explore
+
+![alt text](https://github.com/El-minadero/mt-explore/blob/master/images/social_card_modified.png)
 
 MT-Explore is a GUI meant to assist in the compilation of datasets for MT inversion.
 
@@ -32,11 +33,18 @@ main_app = Mt_Ex_Main()
 main_app.connect_database('MT Data/')
 
 ```
+![alt text](https://github.com/El-minadero/mt-explore/blob/master/images/CAY202.png)
+
 You should see a window pop up with a map view and associated phase/apparent resistivity plot. It is possible to interact with the data using the mouse or specific keys. For a full list of commands press 'h'
 
 Mt Explore assumes the point of this data exploration is to identify stations with strategic location and data quality important to your study area. Ultimately, stations are either included, or excluded from the dataset. To include stations, press 'i'. Similarly stations are excluded by pressing 'o'. 
 
 The incldue/exclude metadata is exported as a pandas dataframe via the load-save commands in .csv format for later data manipulation. This exported dataframe does not contain the transfer function information from the .edi files, but only the location on disk for each station. 
+
+## Known Issues
+There are a few cosmetic issues that I probably wont fix as they dont impact the usability of MT-Explore. However, if you know how to fix them feel free to submit a pull request.
+
+By overriding some of the key bindings of Matplotlib, a few unexpected plot and map behaviors were introduced. If things mess up just kill the plot window and instantiate the Main object again. 
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
