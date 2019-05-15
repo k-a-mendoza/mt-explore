@@ -33,7 +33,7 @@ main_app = Mt_Ex_Main()
 main_app.connect_database('MT Data/')
 
 ```
-![Mt-Explore-example](https://github.com/El-minadero/mt-explore/master/images/CAY202.png)
+![Mt-Explore-example](https://github.com/El-minadero/mt-explore/master/images/ex.png)
 
 You should see a window pop up with a map view and associated phase/apparent resistivity plot. It is possible to interact with the data using the mouse or specific keys. For a full list of commands press 'h'
 
