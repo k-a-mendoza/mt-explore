@@ -3,7 +3,7 @@
 
 ![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/social_card_modified.png)
 
-MT-Explore is a GUI meant to assist in the compilation of datasets for MT inversion.
+MT-Explore is a GUI meant to assist in the compilation of magnetotelluric datasets for inversion purposes.
 
 
 
