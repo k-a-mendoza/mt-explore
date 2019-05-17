@@ -4,8 +4,8 @@ from matplotlib.ticker import ScalarFormatter
 
 
 class MTView(ViewContract):
-    app_res_position = [0.55, 0.5, 0.4, 0.4]
-    phase_position   = [0.55, 0.25, 0.4, 0.2]
+    app_res_position = [0.6, 0.5, 0.35, 0.4]
+    phase_position   = [0.6, 0.25, 0.35, 0.2]
 
     def __init__(self,view):
         super().__init__(view)

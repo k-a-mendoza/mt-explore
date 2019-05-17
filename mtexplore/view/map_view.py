@@ -9,7 +9,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from cartopy.io.img_tiles import Stamen
 import collections
 class MapView(ViewContract):
-    map_position=[0.05,0.5,0.4,0.4]
+    map_position=[0.05,0.05,0.45,0.8]
     base_extent   = [-130,-100,20,50]
     _colormap = colormap.get_cmap('hsv')
 
@@ -192,10 +192,18 @@ class MapView(ViewContract):
         self.update_latlons(extent)
 
     def update_latlons(self,extent):
-        self.gl.ylocator.view_limits(extent[0],extent[1])
-        self.gl.xlocator.view_limits(extent[2],extent[3])
-        self.gl.ylocator.refresh()
-        self.gl.xlocator.refresh()
+        [a.remove() for a in self.gl.xlabel_artists]
+        [a.remove() for a in self.gl.ylabel_artists]
+        [a.remove() for a in self.gl.yline_artists]
+        [a.remove() for a in self.gl.xline_artists]
+        self.gl = None
+        self.gl = self.ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                                    alpha=0.5, linestyle='--', color='black')
+        self.gl.xlabels_top = False
+        self.gl.xlocator = mticker.AutoLocator()
+        self.gl.ylocator = mticker.AutoLocator()
+        self.gl.xformatter = LONGITUDE_FORMATTER
+        self.gl.yformatter = LATITUDE_FORMATTER
 
 
     def get_xyq_values_for_survey(self, stations, survey):

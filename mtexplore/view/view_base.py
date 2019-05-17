@@ -133,7 +133,7 @@ class BaseView(ViewContract):
     def update_selection(self, series):
         self.update()
 
-    def is_in_axes(self, event):
+    def get_axes_of_click(self, event):
         return 'background'
 
     def set_default_df(self, df):
