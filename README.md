@@ -54,6 +54,8 @@ There are a few cosmetic issues that I probably wont fix as they dont impact the
 
 By overriding some of the key bindings of Matplotlib, a few unexpected plot and map behaviors were introduced. If things mess up just kill the plot window and instantiate the Main object again. 
 
+tick locators are temporarily broken. this shouldn't impact usability however.
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
