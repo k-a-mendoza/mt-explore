@@ -1,6 +1,7 @@
 from .map_controller import MapController
 from .cycle_controller import CycleController
 from .save_controller import SaveController
+from .scroll_controller import ScrollController
 from mtexplore.view.view import MainView
 from .controller_abstracts import ControllerBase
 from .selection_controller import SelectionController
@@ -12,20 +13,32 @@ class MainController:
     def __init__(self):
         self._print_default_bindings()
         self.fig = plt.figure(figsize=self.dimensions)
-        self.fig._key_press_method_for_mtpy      = self.key_press_events
-        self.fig._key_release_method_for_mtpy    = self.key_release_events
-        self.fig._button_press_method_for_mtpy   = self.button_press_events
-        self.fig._button_release_method_for_mtpy = self.button_release_events
-        self.fig.canvas.mpl_connect('key_press_event',self.fig._key_press_method_for_mtpy)
+
+        self.bind_methods()
+
+        self.bind_to_mlp()
+
+        self.fig.show()
+        self.controller = ScrollController(
+                            SelectionController(
+                                SaveController(
+                                    CycleController(
+                                        MapController(
+                                            ControllerBase())))))
+
+    def bind_to_mlp(self):
+        self.fig.canvas.mpl_connect('scroll_event', self.fig._scroll_event_for_mtpy)
+        self.fig.canvas.mpl_connect('key_press_event', self.fig._key_press_method_for_mtpy)
         self.fig.canvas.mpl_connect('key_release_event', self.fig._key_release_method_for_mtpy)
         self.fig.canvas.mpl_connect('button_press_event', self.fig._button_press_method_for_mtpy)
         self.fig.canvas.mpl_connect('button_release_event', self.fig._button_release_method_for_mtpy)
-        self.fig.show()
-        self.controller = SelectionController(
-                            SaveController(
-                                CycleController(
-                                    MapController(
-                                        ControllerBase()))))
+
+    def bind_methods(self):
+        self.fig._key_press_method_for_mtpy = self.key_press_events
+        self.fig._key_release_method_for_mtpy = self.key_release_events
+        self.fig._button_press_method_for_mtpy = self.button_press_events
+        self.fig._button_release_method_for_mtpy = self.button_release_events
+        self.fig._scroll_event_for_mtpy = self.scroll_event
 
     def get_figure(self):
         return self.fig
@@ -59,6 +72,10 @@ class MainController:
         self.controller.button_release_event(event)
         self.view.update()
 
+    def scroll_event(self,event):
+        self.controller.scroll_event(event)
+        self.view.update()
+
     def update(self):
         self.controller.update()
 
@@ -70,4 +87,8 @@ class MainController:
                 rcParams[rc_key]=[]
             except ValueError:
                 print('key {} not in list'.format(rc_key))
+
+    def set_default_frame(self):
+        self.controller.set_default_frame()
+        self.view.update()
 

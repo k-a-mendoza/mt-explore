@@ -13,9 +13,6 @@ class ViewContract:
         self._map(df)
         self.view.map(df)
 
-    def _map(self,df):
-        pass
-
     def update(self):
         self._update()
         self.view.update()
@@ -24,8 +21,9 @@ class ViewContract:
         self._finish()
         self.view.finish()
 
-    def _finish(self):
-        pass
+    def set_default_df(self, df):
+        self._set_default_df(df)
+        self.view.set_default_df(df)
 
     def get_axes_of_click(self,event):
         in_axes = self._is_in_axes(event)
@@ -37,9 +35,6 @@ class ViewContract:
     def update_selection(self,series):
         self._update_selection(series)
         self.view.update_selection(series)
-
-    def _update_selection(self,series):
-        pass
 
     def get_figure(self) -> plt.Figure:
         return self.view.get_figure()
@@ -57,8 +52,21 @@ class ViewContract:
             return self.view.get_extent()
         return extent
 
+    def zoom(self,**kwargs):
+        self._zoom(**kwargs)
+        self.view.zoom(**kwargs)
+
+    def _finish(self):
+        pass
+
+    def _update_selection(self,series):
+        pass
+
     def _get_extent(self):
         return None
+
+    def _map(self,df):
+        pass
 
     def _configure(self):
         pass
@@ -83,6 +91,12 @@ class ViewContract:
         return self.view.get_axes(*args,**kwargs)
 
     def _is_in_axes(self, event):
+        pass
+
+    def _set_default_df(self, df):
+        pass
+
+    def _zoom(self,**kwargs):
         pass
 
 class BaseView(ViewContract):
@@ -110,11 +124,17 @@ class BaseView(ViewContract):
     def map(self,df):
         pass
 
+    def zoom(self,**kwargs):
+        pass
+
     def finish(self):
         self.fig.canvas.draw()
 
     def update_selection(self, series):
         self.update()
 
-    def _is_in_axes(self, event):
+    def is_in_axes(self, event):
         return 'background'
+
+    def set_default_df(self, df):
+        pass

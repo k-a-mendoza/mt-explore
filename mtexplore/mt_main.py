@@ -21,4 +21,5 @@ class Mt_Ex_Main:
 
     def connect_database(self,database_directory):
         self.model.set_database_directory(database_directory)
+        self.controller.set_default_frame()
         self.controller.update()

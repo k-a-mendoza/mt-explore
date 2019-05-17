@@ -3,13 +3,14 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import matplotlib.ticker as mticker
 import matplotlib.cm as colormap
+import numpy as np
 import matplotlib.colors as mplcolors
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from cartopy.io.img_tiles import Stamen
 import collections
 class MapView(ViewContract):
     map_position=[0.05,0.5,0.4,0.4]
-    extent   = [-130,-100,20,50]
+    base_extent   = [-130,-100,20,50]
     _colormap = colormap.get_cmap('hsv')
 
     s1 = 20
@@ -37,7 +38,9 @@ class MapView(ViewContract):
         self.selection_handle=None
         self.scatter_handle = None
         self.legend = None
+        self.extent = [] + self.base_extent
         self._surveys=[]
+        self.gl = None
 
     def colormap(self,val):
         rgb = self._colormap(val)
@@ -51,6 +54,13 @@ class MapView(ViewContract):
         self.ax.add_wmts(url, layer,alpha=0.8)
         self.ax.coastlines(resolution='50m',zorder=10)
         self.ax.add_feature(states_provinces, edgecolor='black',zorder=2,linewidth=2)
+        self.gl = self.ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                                    alpha=0.5, linestyle='--', color='black')
+        self.gl.xlabels_top = False
+        self.gl.xlocator = mticker.AutoLocator()
+        self.gl.ylocator = mticker.AutoLocator()
+        self.gl.xformatter = LONGITUDE_FORMATTER
+        self.gl.yformatter = LATITUDE_FORMATTER
 
     def _update_selection(self,station_data):
         if self.selection_handle is not None:
@@ -61,6 +71,7 @@ class MapView(ViewContract):
 
         self.selection_handle = self.ax.scatter(station_data['longitude'],station_data['latitude'],**self._selection_kwargs)
         self.ax.set_title('Survey: {}, Station: {}'.format(survey,id))
+
 
     def _erase_selection(self):
         self.selection_handle.remove()
@@ -86,7 +97,6 @@ class MapView(ViewContract):
                 self._erase_scatter()
             self.scatter_handle=self.ax.scatter(df['longitude'],df['latitude'],edgecolors=df['color'],c=df['qual color'],**self._scatter_kwargs)
             self._check_legend(df)
-            self.update_extent(df)
 
     def _get_extent(self):
         ylim = self.ax.get_ylim()
@@ -120,38 +130,73 @@ class MapView(ViewContract):
         ncols = int((len(items)+3)/3)
         self.legend=self.ax.legend(handles,items,ncol=ncols,loc='lower left')
 
-
-    def update_extent(self,df):
-        extent = [x for x in self.extent]
+    def set_default_extent(self,df):
+        extent = [None,None,None,None]
         if df is not None:
             extent[0]=df['longitude'].min()
             extent[1]=df['longitude'].max()
             extent[2]=df['latitude'].min()
             extent[3]=df['latitude'].max()
+            x_delta = extent[1] - extent[0]
+            y_delta = extent[3] - extent[2]
+            x_delta *= 1.1
+            y_delta *= 1.1
+            x_left = (extent[0] + extent[1]) / 2.0 - x_delta / 2
+            x_right= (extent[0] + extent[1]) / 2.0 + x_delta / 2
+            y_down = (extent[2] + extent[3]) / 2.0 - y_delta / 2 - y_delta / 3
+            y_up   = (extent[2] + extent[3]) / 2.0 + y_delta / 2
+            extent =  [x_left, x_right, y_down, y_up]
+        self.scale=1.0
+        self.extent=extent
 
-        x_max, x_min, y_max, y_min = self._get_plot_extent(extent)
-        self.ax.set_extent([x_min,x_max,y_min,y_max],crs=ccrs.PlateCarree())
-        self.set_latlon_grids()
-        self.update()
+    def _set_default_df(self, df):
+        self.set_default_extent(df)
+        self._update_map_extent()
 
-    def set_latlon_grids(self):
-        gl = self.ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                               alpha=0.5, linestyle='--', color='black')
-        gl.xlabels_top = False
-        gl.xlocator = mticker.AutoLocator()
-        gl.xformatter = LONGITUDE_FORMATTER
-        gl.yformatter = LATITUDE_FORMATTER
+    def _zoom(self,**kwargs):
+        self._update_map_extent(**kwargs)
 
-    def _get_plot_extent(self, extent):
-        x_delta = extent[1] - extent[0]
-        y_delta = extent[3] - extent[2]
-        x_delta *= 1.1
-        y_delta *= 1.1
-        x_min = (extent[0] + extent[1]) / 2.0 - x_delta / 2
-        x_max = (extent[0] + extent[1]) / 2.0 + x_delta / 2
-        y_min = (extent[2] + extent[3]) / 2.0 - y_delta / 2 - y_delta / 3
-        y_max = (extent[2] + extent[3]) / 2.0 + y_delta / 2
-        return x_max, x_min, y_max, y_min
+    def _update_map_extent(self, center=None, zoom=None):
+        extent = [x for x in self.extent]
+        if center is None:
+            self.scale=1.0
+            x = (extent[0]+extent[1])/2
+            y = (extent[2]+extent[3])/2
+            center = [x,y]
+
+        else:
+            if zoom=='in':
+                self.scale*=0.9
+            else:
+                self.scale*=1.1
+
+        extent = [x for x in self.extent]
+        dx_left  = extent[0] - center[0]
+        dx_right = extent[1] - center[0]
+        dy_down  = extent[2] - center[1]
+        dy_up    = extent[3] - center[1]
+
+        dx_left *=self.scale
+        dx_right*=self.scale
+        dy_down *=self.scale
+        dy_up   *=self.scale
+
+        extent = [dx_left,dx_right,dy_down,dy_up]
+
+        extent[0]+=center[0]
+        extent[1]+=center[0]
+        extent[2]+=center[1]
+        extent[3]+=center[1]
+
+        self.ax.set_extent(extent,crs=ccrs.PlateCarree())
+        self.update_latlons(extent)
+
+    def update_latlons(self,extent):
+        self.gl.ylocator.view_limits(extent[0],extent[1])
+        self.gl.xlocator.view_limits(extent[2],extent[3])
+        self.gl.ylocator.refresh()
+        self.gl.xlocator.refresh()
+
 
     def get_xyq_values_for_survey(self, stations, survey):
         x_values = []

@@ -3,6 +3,7 @@ from .database_model import DatabaseModel
 import itertools
 from tkinter import filedialog
 import tkinter as tk
+import pandas as pd
 
 class ModelController:
 
@@ -39,7 +40,7 @@ class ModelController:
         file_path = filedialog.askdirectory(title="Select .edi database directory")
         self.database_model.new_df_load(file_path)
 
-    def get_mapping_data(self):
+    def get_mapping_data(self)-> pd.DataFrame:
         return self.database_model.get_mapping_data()
 
     def next_selection(self):

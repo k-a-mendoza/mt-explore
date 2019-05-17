@@ -52,9 +52,17 @@ class ControllerInterface:
         self._key_release_event(event)
         self.controller.key_release_event(event)
 
+    def scroll_event(self, event):
+        self._scroll_event(event)
+        self.controller.scroll_event(event)
+
     def update(self):
         self._update()
         self.controller.update()
+
+    def set_default_frame(self):
+        self._set_default_frame()
+        self.controller.set_default_frame()
 
     def _connect_view(self, view: ViewContract):
         self.view = view
@@ -83,6 +91,12 @@ class ControllerInterface:
     def _button_release_event(self, event):
         pass
 
+    def _scroll_event(self,event):
+        pass
+
+    def _set_default_frame(self):
+        pass
+
 
 class ControllerBase(ControllerInterface):
 
@@ -107,6 +121,9 @@ class ControllerBase(ControllerInterface):
     def update_em(self):
         pass
 
+    def scroll_event(self,event):
+        pass
+
     def update(self):
         pass
 
@@ -114,4 +131,7 @@ class ControllerBase(ControllerInterface):
         pass
 
     def key_release_event(self, event):
+        pass
+
+    def set_default_frame(self):
         pass
