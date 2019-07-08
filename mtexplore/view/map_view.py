@@ -26,6 +26,8 @@ class MapView(ViewContract):
                             zorder=5,
                             facecolor='None',
                             linewidths=2)
+
+    _mesh_kwargs = dict(color='white')
     _cult_feature_nat_earth = dict(
             category='cultural',
             name='admin_1_states_provinces_lines',
@@ -40,6 +42,8 @@ class MapView(ViewContract):
         self.legend = None
         self.extent = [] + self.base_extent
         self._surveys=[]
+        self._control_points={'x':[],
+                              'y':[]}
         self.gl = None
 
     def colormap(self,val):
@@ -55,12 +59,26 @@ class MapView(ViewContract):
         self.ax.coastlines(resolution='50m',zorder=10)
         self.ax.add_feature(states_provinces, edgecolor='black',zorder=2,linewidth=2)
         self.gl = self.ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                    alpha=0.5, linestyle='--', color='black')
+                                    alpha=0.5, linestyle='--', color='black',zorder=1)
         self.gl.xlabels_top = False
         self.gl.xlocator = mticker.AutoLocator()
         self.gl.ylocator = mticker.AutoLocator()
         self.gl.xformatter = LONGITUDE_FORMATTER
         self.gl.yformatter = LATITUDE_FORMATTER
+        self.grids={'x':[],'y':[]}
+
+    def _update_grid(self, x_locs, y_locs, *args,**kwargs):
+        for artist in self.grids['x']:
+            artist.remove()
+        self.grids['x']=[]
+        for artist in self.grids['y']:
+            artist.remove()
+        self.grids['y']=[]
+
+        for y in y_locs:
+            self.grids['x'].append(self.ax.axhline(y,**self._mesh_kwargs))
+        for x in x_locs:
+            self.grids['y'].append(self.ax.axvline(x,**self._mesh_kwargs))
 
     def _update_selection(self,station_data):
         if self.selection_handle is not None:
@@ -71,6 +89,12 @@ class MapView(ViewContract):
 
         self.selection_handle = self.ax.scatter(station_data['longitude'],station_data['latitude'],**self._selection_kwargs)
         self.ax.set_title('Survey: {}, Station: {}'.format(survey,id))
+
+    def _add_xaxis_line(self,x):
+        self._control_points['x'].append(x)
+
+    def _add_yaxis_line(self,y):
+        self._control_points['y'].append(y)
 
 
     def _erase_selection(self):

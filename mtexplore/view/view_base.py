@@ -56,6 +56,11 @@ class ViewContract:
         self._zoom(**kwargs)
         self.view.zoom(**kwargs)
 
+
+    def update_grid(self,*args,**kwargs):
+        self._update_grid(*args,**kwargs)
+        self.view.update_grid(*args,**kwargs)
+
     def _finish(self):
         pass
 
@@ -64,6 +69,9 @@ class ViewContract:
 
     def _get_extent(self):
         return None
+
+    def _update_grid(self,*args,**kwargs):
+        pass
 
     def _map(self,df):
         pass
@@ -137,4 +145,7 @@ class BaseView(ViewContract):
         return 'background'
 
     def set_default_df(self, df):
+        pass
+
+    def update_grid(self,*args,**kwargs):
         pass

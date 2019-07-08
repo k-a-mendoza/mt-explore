@@ -1,5 +1,6 @@
 
 from .database_model import DatabaseModel
+from .grid_model import GridModel
 import itertools
 from tkinter import filedialog
 import tkinter as tk
@@ -9,6 +10,7 @@ class ModelController:
 
     def __init__(self,mt_facade=None, working_directory=None,source_directory=None,**kwargs):
         self.database_model    = DatabaseModel(mt_facade,source_directory)
+        self.grid_model        = GridModel()
         self._survey_cycler    = None
         self._selection_cycler = None
 
@@ -21,13 +23,13 @@ class ModelController:
         file_path = filedialog.askdirectory(title='select .edi database directory')
         self.database_model.add_new_edi_folder(file_path)
 
-    def save(self):
+    def save_mt_data(self):
         root = tk.Tk()
         root.withdraw()
         file_path = filedialog.asksaveasfilename(title="Select .csv save location")
         self.database_model.save(file_path)
 
-    def load(self):
+    def load_mt_data(self):
         root = tk.Tk()
         root.withdraw()
 
@@ -70,6 +72,26 @@ class ModelController:
             station_indices = self.database_model.get_indices_matching_extent(extent)
             self._selection_cycler = ListCycler(station_indices)
 
+    def add_control_point(self,type,location):
+        self.grid_model.add_control_point(type,location)
+
+    def get_gridpoints(self):
+        return self.grid_model.get_gridpoints()
+
+    def delete_closest_gridline(self,location):
+        self.grid_model.delete_closest_gridline(location)
+
+    def save_grid_data(self):
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.asksaveasfilename(title="Save Preliminary Grid Data")
+        self.grid_model.save_grid(file_path)
+
+    def load_grid_data(self):
+        root = tk.Tk()
+        root.withdraw()
+        file_path = filedialog.askopenfilename(title="Load Grid Data")
+        self.grid_model.load_grid(file_path)
 
     def get_selection(self):
         selected_index = self._selection_cycler.get_selected()

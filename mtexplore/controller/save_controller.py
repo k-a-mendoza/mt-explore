@@ -9,9 +9,9 @@ class SaveController(ControllerInterface):
 
     def _key_press_event(self,event):
         if event.key=='j':
-            self.model.save()
+            self.model.save_mt_data()
         elif event.key=='k':
-            self.model.load()
+            self.model.load_mt_data()
             data = self.model.get_mapping_data()
             self.view.map(data)
         elif event.key=='l':
