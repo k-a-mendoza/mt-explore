@@ -11,3 +11,7 @@ def main():
 
 if __name__=='__main__':
     main_app = main()
+    print('here')
+    main_app.view.start()
+    main_app.controller.start()
+    main_app.view.start()

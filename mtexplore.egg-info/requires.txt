@@ -1,0 +1,5 @@
+cartopy>=0.17.0
+matplotlib>=3.0.3
+numpy>=0.16.2
+pandas>=0.24.
+mtpy>=1.0.1

@@ -301,52 +301,36 @@ class WeightsView(_Format):
         self._clean()
         periods = 1/mt_obj.Z.freq
         if hasattr(mt_obj,'Weights'):
-            impedance_stdvs =  np.copy(mt_obj.Weights.impedance_weights)
-            impedance_stdvs[impedance_stdvs==-1]=mt_obj.Weights.impedance_ceiling
-            
-            tipper_stdvs    =  np.copy(mt_obj.Weights.tipper_weights)
-            tipper_stdvs[tipper_stdvs==-1]=mt_obj.Weights.tipper_ceiling
-            
-            period_range = self.ax.get_xlim()
-            ones = np.ones(np.asarray(period_range).shape)
+            pass
             self.ax.set_ylabel('Weights')
-            self.plot.append(self.ax.plot(period_range,mt_obj.Weights.impedance_ceiling*ones,
-                                          ls='--',color='red',label='Z Ceiling'))
-            self.plot.append(self.ax.plot(period_range,mt_obj.Weights.impedance_floor*ones,
-                                          color='black',label='Z Floor'))
-            self.plot.append(self.ax.plot(period_range,mt_obj.Weights.tipper_ceiling*ones,
-                                          ls='--',color='orange',label='K Ceiling'))
-            self.plot.append(self.ax.plot(period_range,mt_obj.Weights.tipper_floor*ones,
-                                          ls=':',color='darkorange',label='K Floor'))
         else:
-            impedance_stdvs = mt_obj.Z.z_err
-            tipper_stdvs    = mt_obj.Tipper.tipper_err
-            max_val = np.amax(impedance_stdvs)
+            impedance_stds = mt_obj.Z.z_err
+            tipper_stds    = mt_obj.Tipper.tipper_err
+            max_val = np.amax(impedance_stds)
             self.ax.set_ylabel('St-devs')
         
-        self.ax.set_ylim([0,1])
+        self.ax.set_ylim([-0.5,2])
         
         
-        
-        self.plot_series(periods, impedance_stdvs[:,0,0], 
+        self.plot_series(periods, impedance_stds[:,0,0], 
                          self.xy_marker,self.xx_color,self.xx_ls,r'$Z_{xx}$')
 
-        self.plot_series(periods, impedance_stdvs[:,0,1],
+        self.plot_series(periods, impedance_stds[:,0,1],
                          self.xy_marker, self.xy_color,self.xy_ls,r'$Z_{xy}$')
 
-        self.plot_series(periods, impedance_stdvs[:,1,1], 
+        self.plot_series(periods, impedance_stds[:,1,1], 
                          self.yy_marker, self.yy_color, self.yy_ls,r'$Z_{yy}$')
 
-        self.plot_series(periods, impedance_stdvs[:,1,0],
+        self.plot_series(periods, impedance_stds[:,1,0],
                          self.yx_marker, self.yx_color,self.yx_ls,r'$Z_{yx}$')
         
-        self.plot_series(periods, tipper_stdvs[:,0,0], 
+        self.plot_series(periods, tipper_stds[:,0,0], 
                          self.kx_marker, self.kx_color, self.yy_ls,r'$K_{x}$')
 
-        self.plot_series(periods, tipper_stdvs[:,0,1],
+        self.plot_series(periods, tipper_stds[:,0,1],
                          self.ky_marker, self.ky_color,self.yx_ls,r'$K_{y}$')
         if  self.legend:
-            self.legend=self.ax.legend(loc='upper center',fontsize=7,ncol=5)
+            self.legend=self.ax.legend(loc='upper right',fontsize=7,ncol=2)
             self.legend=False
         
         

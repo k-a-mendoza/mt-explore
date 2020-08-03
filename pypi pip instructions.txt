@@ -1,0 +1,4 @@
+ # test this on pypi test
+ twine upload dist/mtexplore-el-minadero-0.0.0.tar.gz -r testpypi
+
+ tools>run setup.py task using sdist and no command line arguments
