@@ -7,22 +7,37 @@ import collections
 class MTView(ViewContract):
     app_res_position = [0.6, 0.5, 0.35, 0.4]
     phase_position   = [0.6, 0.25, 0.35, 0.15]
-    tipper_position  = [0.1, 0.25, 0.45,0.15]
-    weight_position  = [0.1, 0.05, 0.45,0.15]
+    induction_position  = [0.1, 0.25, 0.40,0.15]
+    tipper_position  = [0.6, 0.05, 0.35,0.15]
+    weight_position  = [0.1, 0.05, 0.40,0.15]
 
     def __init__(self,view):
         super().__init__(view)
         self.app_res = AppResView()
         self.phase   = PhaseView()
+        self.induction  = InductionView()
         self.tipper  = TipperView()
         self.weights = WeightsView()
 
-    def _update_selection(self,selection_row,**kwargs):
-        mt_obj = selection_row['mt obj']
-        self.phase.update(mt_obj)
-        self.app_res.update(mt_obj)
-        self.tipper.update(mt_obj)
-        self.weights.update(mt_obj)
+    def _update_selection(self,mt_obj,**kwargs):
+        mt_obj = mt_obj['mt obj']
+        if mt_obj is None:
+            self.phase._clean()
+            self.app_res._clean()
+            self.induction._clean()
+            self.weights._clean()
+        else:
+            z_angles      = mt_obj.Z.rotation_angle
+            tipper_angles = mt_obj.Tipper.rotation_angle
+            mt_obj.Z.rotate(-z_angles)
+            mt_obj.Tipper.rotate(-tipper_angles)
+
+            self.phase.update(mt_obj)
+            self.app_res.update(mt_obj)
+            self.tipper.update(mt_obj)
+            self.induction.update(mt_obj)
+            self.weights.update(mt_obj)
+            self.ax.set_xlim([1e-3, 1e5])
 
     def _is_in_axes(self, event):
         if event.inaxes==self.app_res.ax:
@@ -33,6 +48,8 @@ class MTView(ViewContract):
             return 'tipper'
         elif event.inaxes==self.weights.ax:
             return 'weights'
+        elif event.inaxes==self.induction.ax:
+            return 'induction'
         else:
             return None
 
@@ -40,17 +57,21 @@ class MTView(ViewContract):
     def _configure(self):
         ax1=self.add_axes(self.app_res_position,label='app_res')
         ax2=self.add_axes(self.phase_position,label='phase')
-        ax3=self.add_axes(self.tipper_position,label='tipper')
+        ax3=self.add_axes(self.induction_position,label='induction')
         ax4=self.add_axes(self.weight_position,label='weights')
+        ax5=self.add_axes(self.tipper_position,label='tipper')
         ax1.get_shared_x_axes().join(ax1,ax2,ax4)
         ax1.set_xlim([1e-3, 1e5])
         ax1.set_xscale('log')
         ax1.tick_params(axis='x', which='major',  length=10, grid_linewidth=3,grid_linestyle='-')
         ax1.tick_params(axis='x', which='minor', length=7, grid_linewidth=3, grid_linestyle='--')
+        self.ax=ax1
         self.app_res.configure(ax1)
         self.phase.configure(ax2)
-        self.tipper.configure(ax3)
+        self.tipper.configure(ax5)
         self.weights.configure(ax4)
+        self.induction.configure(ax3)
+
        
 
 
@@ -65,10 +86,10 @@ class _Format():
     lw=1.5
     kx_color='lime'
     ky_color='darkgreen'
-    yx_color=(1, 0.7, 0.2)
-    xy_color=(0.7, 0.2, 1)
-    xx_color=(1,0,0)
-    yy_color=(0,0,1)
+    xx_color=(1, 0.7, 0.2)
+    yy_color=(0.7, 0.2, 1)
+    yx_color=(1,0,0)
+    xy_color=(0,0,1)
     yx_ls=':'
     xy_ls=':'
     xx_ls=':'
@@ -190,9 +211,10 @@ class AppResView(_Format):
         self.ax.set_ylim([log_cast(0.1,min_yval),log_cast(10,max_yval)])
         self.ax.set_title(mt_obj.station)
 
-        self.plot_series(periods, res_xx, res_xx_err,
-                         self.xy_marker,self.xx_color,
-                         self.xx_color,self.xx_color,self.xx_ls,r'$\rho_{xx}$')
+        
+        self.plot_series(periods, res_yx, res_yx_err,
+                         self.yx_marker, self.yx_color,
+                         self.yx_color, self.yx_color, self.yx_ls,r'$\rho_{yx}$')
 
         self.plot_series(periods, res_xy, res_xy_err,
                          self.xy_marker, self.xy_color,
@@ -201,10 +223,11 @@ class AppResView(_Format):
         self.plot_series(periods, res_yy, res_yy_err,
                          self.yy_marker, self.yy_color,
                          self.yy_color, self.yy_color, self.yy_ls,r'$\rho_{yy}$')
+        
+        self.plot_series(periods, res_xx, res_xx_err,
+                         self.xy_marker,self.xx_color,
+                         self.xx_color,self.xx_color,self.xx_ls,r'$\rho_{xx}$')
 
-        self.plot_series(periods, res_yx, res_yx_err,
-                         self.yx_marker, self.yx_color,
-                         self.yx_color, self.yx_color, self.yx_ls,r'$\rho_{yx}$')
 
         if not self.legend:
             self.legend=self.ax.legend(loc='upper right',ncol=2)
@@ -227,15 +250,91 @@ class AppResView(_Format):
                                           capthick=self.lw, label=label)
         self.plot.append(plot_obj)
     
-class TipperView(_Format):
+class InductionView(_Format):
     fontsize = 12
     weight ='bold'
     arrow_lw =0.7
-    facecolor_real = 'black'
-    facecolor_imag = 'blue'
+    facecolor_real = 'blue'
+    facecolor_imag = 'green'
     head_width = 0.01
     head_length = 0.03
     length_includes_head=False
+    def __init__(self):
+        super().__init__()
+        self.plot=[]
+        self.legend=True
+
+    def configure(self, axes):
+        axes.yaxis.set_major_formatter(ScalarFormatter())
+        axes.set_ylim([-1,1])
+        axes.set_ylabel('Induction Arrows',fontsize=self.fontsize,weight=self.weight)
+        axes.tick_params(axis='both',length=10,grid_linewidth=3)
+        axes.tick_params(axis='y', which='minor', length=7, grid_linewidth=0.5, grid_linestyle='--')
+        axes.grid(True,linewidth=1,which='both',color='black')
+        self.ax = axes
+
+    def update(self,mt_obj,*args,**kwargs):
+        self._clean()
+        periods = np.log10(1/mt_obj.Tipper.freq)
+        
+        angle_imag = np.deg2rad(mt_obj.Tipper.angle_imag)
+        mag_imag   = mt_obj.Tipper.mag_imag
+        angle_real = np.deg2rad(mt_obj.Tipper.angle_real)
+        mag_real   = mt_obj.Tipper.mag_real
+
+        # borrowed from MtPy
+        txr = np.cos(angle_real)*mag_real
+        txi = np.cos(angle_imag)*mag_imag
+        tyr = np.sin(angle_real)*mag_real
+        tyi = np.sin(angle_imag)*mag_imag
+      
+        offset_decade  = np.asarray([-3,5])
+        self.ax.set_ylim([-0.5,0.5])
+        self.ax.set_xlim(offset_decade)
+        
+     
+        self.plot_series(periods, txr, tyr, label='real',color=self.facecolor_real)
+        self.plot_series(periods, txi, tyi, label='imag',color=self.facecolor_imag)
+        
+        if  self.legend:
+            self.legend=self.ax.legend(loc='upper left')
+            self.legend=False
+        
+    def plot_series(self, periods, dx, dy, color, label):
+        """
+        
+        dx/y flipped to conform to geographic coordinates
+
+        Parameters
+        ----------
+        periods : TYPE
+            DESCRIPTION.
+        dx : TYPE
+            DESCRIPTION.
+        dy : TYPE
+            DESCRIPTION.
+        color : TYPE
+            DESCRIPTION.
+        label : TYPE
+            DESCRIPTION.
+
+        Returns
+        -------
+        None.
+
+        """
+        quiver_obj=self.ax.quiver(periods,np.zeros(periods.shape),dy,dx,label=label,angles='xy',
+                      color=color,headwidth=self.head_width,headlength=self.head_length)
+        self.plot.append(quiver_obj)
+        
+        
+class TipperView(_Format):
+    fontsize = 12
+    weight ='bold'
+    kxr_color = 'crimson'
+    kxi_color = 'crimson'
+    kyr_color = 'blue'
+    kyi_color = 'blue'
     def __init__(self):
         super().__init__()
         self.plot=[]
@@ -252,33 +351,35 @@ class TipperView(_Format):
 
     def update(self,mt_obj,*args,**kwargs):
         self._clean()
-        periods = 1/mt_obj.Tipper.freq
+        freq = 1/mt_obj.Tipper.freq
         
-        # borrowed from MtPy
-        txr = mt_obj.Tipper.mag_real * np.sin(mt_obj.Tipper.angle_real * np.pi / 180) * np.log10(periods)
-        tyr = mt_obj.Tipper.mag_real * np.cos(mt_obj.Tipper.angle_real * np.pi / 180)
+        kxr   = np.real(mt_obj.Tipper.tipper[:,0,0])
+        kyr   = np.real(mt_obj.Tipper.tipper[:,0,1])
+        kxi   = np.imag(mt_obj.Tipper.tipper[:,0,0])
+        kyi   = np.imag(mt_obj.Tipper.tipper[:,0,1])
 
-        txi = mt_obj.Tipper.mag_imag * np.sin(mt_obj.Tipper.angle_imag * np.pi / 180) * np.log10(periods)
-        tyi = mt_obj.Tipper.mag_imag * np.cos(mt_obj.Tipper.angle_imag * np.pi / 180)
+        all_values = np.stack([kxr,kyr,kxi,kyi])
       
-        lim = [min(periods),max(periods)]
-        nearest_pow_10 = np.log10(lim).round()
-        offset_decade  = np.asarray([-1,1]) + nearest_pow_10
-        self.ax.set_ylim([-1,1])
+        offset_decade  = np.asarray([1e-3,1e5])
+        self.ax.set_ylim([-0.3,0.3])
         self.ax.set_xlim(offset_decade)
         
-     
-        self.plot_series(np.log10(periods), txr, tyr, label='real',color=self.facecolor_real)
-        self.plot_series(np.log10(periods), txi, tyi, label='imag',color=self.facecolor_imag)
+        self.plot.append(self.ax.semilogx(freq,kxr,color=self.kxr_color,label='kxr',
+                                          marker=self.xx_marker))
+        self.plot.append(self.ax.semilogx(freq,kxi,color=self.kxi_color,linestyle=':',
+                                          label='kxi',marker=self.xx_marker,markerfacecolor='none'))
+        self.plot.append(self.ax.semilogx(freq,kyr,color=self.kyr_color,label='kyr',
+                                          marker=self.xx_marker))
+        self.plot.append(self.ax.semilogx(freq,kyi,color=self.kyi_color,linestyle=':',
+                                          label='kyi',marker=self.xx_marker,markerfacecolor='none'))
         
         if  self.legend:
             self.legend=self.ax.legend(loc='upper left')
             self.legend=False
         
-    def plot_series(self, periods, dx, dy, color, label):
-        quiver_obj=self.ax.quiver(periods,np.zeros(periods.shape),dx,dy,label=label,angles='xy',
-                      color=color,headwidth=self.head_width,headlength=self.head_length)
-        self.plot.append(quiver_obj)
+   
+        
+    
     
 class WeightsView(_Format):
     fontsize = 12
@@ -326,19 +427,18 @@ class WeightsView(_Format):
         
         self.ax.set_ylim([0,1])
         
-        
-        
-        self.plot_series(periods, impedance_stdvs[:,0,0], 
-                         self.xy_marker,self.xx_color,self.xx_ls,r'$Z_{xx}$')
 
         self.plot_series(periods, impedance_stdvs[:,0,1],
                          self.xy_marker, self.xy_color,self.xy_ls,r'$Z_{xy}$')
+        
+        self.plot_series(periods, impedance_stdvs[:,1,0],
+                         self.yx_marker, self.yx_color,self.yx_ls,r'$Z_{yx}$')
 
         self.plot_series(periods, impedance_stdvs[:,1,1], 
                          self.yy_marker, self.yy_color, self.yy_ls,r'$Z_{yy}$')
-
-        self.plot_series(periods, impedance_stdvs[:,1,0],
-                         self.yx_marker, self.yx_color,self.yx_ls,r'$Z_{yx}$')
+        
+        self.plot_series(periods, impedance_stdvs[:,0,0], 
+                         self.xy_marker,self.xx_color,self.xx_ls,r'$Z_{xx}$')
         
         self.plot_series(periods, tipper_stdvs[:,0,0], 
                          self.kx_marker, self.kx_color, self.yy_ls,r'$K_{x}$')
@@ -346,7 +446,7 @@ class WeightsView(_Format):
         self.plot_series(periods, tipper_stdvs[:,0,1],
                          self.ky_marker, self.ky_color,self.yx_ls,r'$K_{y}$')
         if  self.legend:
-            self.legend=self.ax.legend(loc='upper center',fontsize=7,ncol=5)
+            self.legend=self.ax.legend(loc='upper center',fontsize=7,ncol=6)
             self.legend=False
         
         

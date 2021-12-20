@@ -4,29 +4,40 @@ import cartopy.feature as cfeature
 import matplotlib.ticker as mticker
 import matplotlib.cm as colormap
 import numpy as np
+import pandas as pd
 import matplotlib.colors as mplcolors
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 from cartopy.io.img_tiles import Stamen
 import collections
+from owslib.wmts import TileMatrixSetLink, TileMatrixLimits, _TILE_MATRIX_SET_TAG, _TILE_MATRIX_SET_LIMITS_TAG, _TILE_MATRIX_LIMITS_TAG
 
 class MapView(ViewContract):
     map_position=[0.05,0.5,0.45,0.4]
     base_extent   = [-130,-100,20,50]
-    _colormap = colormap.get_cmap('hsv')
+    _colormap = colormap.get_cmap('nipy_spectral')
 
     s1 = 20
     s2 = 50
+    s3 = 50
     lw = 0.8
+    _legend_kwargs = dict(ncol=5,loc='lower left',fontsize=7)
     _none_color='none'
     _include='green'
     _exclude='red'
-    _scatter_kwargs = dict(s=s1,linewidths=lw,zorder=3,label=None)
+    _scatter_kwargs_data   = dict(s=s1,linewidths=lw,zorder=3,marker='o')
+    _scatter_kwargs_nodata = dict(s=s1,linewidths=lw,zorder=3,marker='P')
     _selection_kwargs = dict(marker='o',
-                            edgecolor='red',
+                             facecolor='none',
+                            edgecolor='white',
                             s=s2,
-                            zorder=5,
-                            facecolor='None',
+                            zorder=6,
                             linewidths=2)
+    _include_kwargs = dict(marker='o',
+                             facecolor='none',
+                            edgecolor='black',
+                            s=s3,
+                            zorder=5,
+                            linewidths=3)
 
     _mesh_kwargs = dict(color='white')
     _state_feature = dict(
@@ -44,12 +55,14 @@ class MapView(ViewContract):
         super().__init__(view)
         self.selection_id=None
         self.selection_handle=None
-        self.scatter_handle = None
+        self.base_scatter_handles = []
+        self.selected_scatter_handle = None
         self.legend = None
         self.extent = [] + self.base_extent
-        self._surveys=[]
+        self._projects=[]
         self._control_points={'x':[],
                               'y':[]}
+        self.base_scale = 1.2
         self.gl = None
 
     def colormap(self,val):
@@ -66,37 +79,21 @@ class MapView(ViewContract):
         self.ax.coastlines(resolution='50m',zorder=10)
         self.ax.add_feature(states_provinces, edgecolor='black',zorder=2,linewidth=1.5)
         self.ax.add_feature(countries, edgecolor='black', zorder=2, linewidth=2)
-        self.gl = self.ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                    alpha=0.5, linestyle='--', color='black',zorder=1)
-        self.gl.xlabels_top = False
-        self.gl.xlocator = mticker.AutoLocator()
-        self.gl.ylocator = mticker.AutoLocator()
-        self.gl.xformatter = LONGITUDE_FORMATTER
-        self.gl.yformatter = LATITUDE_FORMATTER
-        self.grids={'x':[],'y':[]}
 
-    def _update_grid(self, x_locs, y_locs, *args,**kwargs):
-        for artist in self.grids['x']:
-            artist.remove()
-        self.grids['x']=[]
-        for artist in self.grids['y']:
-            artist.remove()
-        self.grids['y']=[]
-
-        for y in y_locs:
-            self.grids['x'].append(self.ax.axhline(y,**self._mesh_kwargs))
-        for x in x_locs:
-            self.grids['y'].append(self.ax.axvline(x,**self._mesh_kwargs))
-
+   
     def _update_selection(self,station_data):
         if self.selection_handle is not None:
             self._erase_selection()
+        if station_data['project'] is None:
+            return None
+        
+        df = station_data['project']
+        project = df['project'].values[0]
+        station     = df['station'].values[0]
 
-        survey = station_data['survey']
-        id     = station_data['station id']
-
-        self.selection_handle = self.ax.scatter(station_data['longitude'],station_data['latitude'],**self._selection_kwargs)
-        self.ax.set_title('Survey: {}, Station: {}'.format(survey,id))
+        self.selection_handle = self.ax.scatter(df['longitude'],
+                                                df['latitude'],**self._selection_kwargs)
+        self.ax.set_title(f'Project: {project}, Station: {station}')
 
     def _add_xaxis_line(self,x):
         self._control_points['x'].append(x)
@@ -106,61 +103,78 @@ class MapView(ViewContract):
 
 
     def _erase_selection(self):
-        self.selection_handle.remove()
-        del self.selection_handle
-        self.selection_handle=None
+        if self.selection_handle is not None:
+            self.selection_handle.remove()
+            del self.selection_handle
+            self.selection_handle=None
 
     def _erase_scatter(self):
-        self.scatter_handle.remove()
-        del self.scatter_handle
-        self.scatter_handle=None
+        for handle in self.base_scatter_handles:
+            handle.remove()
+            del handle
+        self.scatter_handle=[]
+        
+    def _erase_scatter_selection(self):
+        if self.selected_scatter_handle is not None:
+            self.selected_scatter_handle.remove()
+            del self.selected_scatter_handle
+            self.selected_scatter_handle=None
 
     def _is_in_axes(self, event):
-        x,y = event.x, event.y
         if event.inaxes == self.ax:
             return 'map'
         return None
+    
+    def _map(self,df):
+        self.plot_include(df)
 
 
-    def map(self,df):
+    def plot_scatter(self,df):
         if not df.empty:
-            df = self.assign_survey_colors(df)
-            if self.scatter_handle is not None:
-                self._erase_scatter()
-            self.scatter_handle=self.ax.scatter(df['longitude'],df['latitude'],edgecolors=df['color'],c=df['qual color'],**self._scatter_kwargs)
-            self._check_legend(df)
+            df = self.assign_project_colors(df)
+            self._erase_scatter()
+                
+            self.ax.scatter(df['longitude'],df['latitude'],
+                                                c=df['color'],**self._scatter_kwargs_data)
+
+            
+            
+    def plot_include(self,df):
+        if not df.empty:
+            self._erase_scatter_selection()
+            df = df[df.include]
+            self.ax.scatter(df['longitude'],df['latitude'],**self._include_kwargs)
+            
 
     def _get_extent(self):
         ylim = self.ax.get_ylim()
         xlim = self.ax.get_xlim()
         return (xlim, ylim)
 
-    def assign_survey_colors(self,df):
-        df_survey = df['survey'].unique()
+    def assign_project_colors(self,df):
+        df_project = df['project'].unique()
         color_dict = {}
-        for ix, survey in enumerate(df_survey):
-            color_dict[survey]= self.colormap(ix/len(df_survey))
+        for ix, project in enumerate(df_project):
+            color_dict[project]= self.colormap(ix/len(df_project))
 
         for key,value in color_dict.items():
-            df.at[df['survey']==key,'color']=value
+            df.at[df['project']==key,'color']=value
         df.at[df['include'] == 0, 'qual color'] = self._none_color
         df.at[df['include'] == 1, 'qual color'] = self._include
         return df
 
-    def _check_legend(self,df):
-        items = collections.Counter(df['survey'].unique())
+    def prep_legend(self,df):
+        items = list(df['project'].unique())
         if self.legend is not None:
             self.legend.remove()
         handles=[]
-        for ix, survey in enumerate(items):
+        for ix, project in enumerate(items):
             color = self.colormap(ix / len(items))
-            handle = self.ax.scatter([], [], label=survey, edgecolors=color, c='none', s=self.s1,linewidths=self.lw)
+            handle = self.ax.scatter([], [], label=project, c=color, edgecolors='none', s=self.s1,linewidths=self.lw)
             handles.append(handle)
 
-        handles.append(self.ax.scatter([], [], label='exclude station',  edgecolors='black',   c=self._none_color))
-        handles.append(self.ax.scatter([], [], label='include station', edgecolors='black', c=self._include))
-        ncols = 4
-        self.legend=self.ax.legend(handles,items,ncol=ncols,loc='lower left',fontsize=7)
+       
+        self.legend=self.ax.legend(handles,items,**self._legend_kwargs)
 
     def set_default_extent(self,df):
         extent = [None,None,None,None]
@@ -178,71 +192,47 @@ class MapView(ViewContract):
             y_down = (extent[2] + extent[3]) / 2.0 - y_delta / 2 - y_delta / 3
             y_up   = (extent[2] + extent[3]) / 2.0 + y_delta / 2
             extent =  [x_left, x_right, y_down, y_up]
-        self.scale=1.0
-        self.extent=extent
+            self.ax.set_xlim([x_left,x_right])
+            self.ax.set_ylim([y_down,y_up])
 
     def _set_default_df(self, df):
+        self.prep_legend(df)
+        self.plot_scatter(df)
         self.set_default_extent(df)
-        self._update_map_extent()
 
     def _zoom(self,**kwargs):
         self._update_map_extent(**kwargs)
 
     def _update_map_extent(self, center=None, zoom=None):
-        extent = [x for x in self.extent]
-        if center is None:
-            self.scale=1.0
-            x = (extent[0]+extent[1])/2
-            y = (extent[2]+extent[3])/2
-            center = [x,y]
-
+        cur_xlim = self.ax.get_xlim()
+        cur_ylim = self.ax.get_ylim()
+        cur_xrange = (cur_xlim[1] - cur_xlim[0])*.5
+        cur_yrange = (cur_ylim[1] - cur_ylim[0])*.5
+        xdata = center[0] # get event x location
+        ydata = center[1] # get event y location
+        if zoom == 'in':
+            # deal with zoom in
+            scale_factor = 1/self.base_scale
+        elif zoom == 'out':
+            # deal with zoom out
+            scale_factor = self.base_scale
         else:
-            if zoom=='in':
-                self.scale*=0.9
-            else:
-                self.scale*=1.1
-
-        extent = [x for x in self.extent]
-        dx_left  = extent[0] - center[0]
-        dx_right = extent[1] - center[0]
-        dy_down  = extent[2] - center[1]
-        dy_up    = extent[3] - center[1]
-
-        dx_left *=self.scale
-        dx_right*=self.scale
-        dy_down *=self.scale
-        dy_up   *=self.scale
-
-        extent = [dx_left,dx_right,dy_down,dy_up]
-
-        extent[0]+=center[0]
-        extent[1]+=center[0]
-        extent[2]+=center[1]
-        extent[3]+=center[1]
-
-        self.ax.set_extent(extent,crs=ccrs.PlateCarree())
-        self.update_latlons(extent)
-
-    def update_latlons(self,extent):
-#        [a.remove() for a in self.gl.xlabel_artists]
-        #[a.remove() for a in self.gl.ylabel_artists]
-        #[a.remove() for a in self.gl.yline_artists]
-       # [a.remove() for a in self.gl.xline_artists]
-        self.gl = None
-        self.gl = self.ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                                    alpha=0.5, linestyle='--', color='black')
-        self.gl.xlabels_top = False
-        self.gl.xlocator = mticker.AutoLocator()
-        self.gl.ylocator = mticker.AutoLocator()
-        self.gl.xformatter = LONGITUDE_FORMATTER
-        self.gl.yformatter = LATITUDE_FORMATTER
+            # deal with something that should never happen
+            scale_factor = 1
+          
+        # set new limits
+        self.ax.set_xlim([xdata - cur_xrange*scale_factor,
+                     xdata + cur_xrange*scale_factor])
+        self.ax.set_ylim([ydata - cur_yrange*scale_factor,
+                     ydata + cur_yrange*scale_factor])
+  
 
 
-    def get_xyq_values_for_survey(self, stations, survey):
+    def get_xyq_values_for_project(self, stations, project):
         x_values = []
         y_values = []
         q_values = []
-        for id, entry in stations[survey].items():
+        for id, entry in stations[project].items():
             q_values.append(self.get_color_value(entry[1]))
             x_values.append(entry[0][1])
             y_values.append(entry[0][0])
@@ -257,4 +247,36 @@ class MapView(ViewContract):
             return self._marginal_color
         else:
             return self._failing_color
+
+def custom_from_elements(link_elements):
+    links = []
+    for link_element in link_elements:
+        matrix_set_elements = link_element.findall(_TILE_MATRIX_SET_TAG)
+        if len(matrix_set_elements) == 0:
+            raise ValueError('Missing TileMatrixSet in %s' % link_element)
+        elif len(matrix_set_elements) > 1:
+            set_limits_elements = link_element.findall(
+                _TILE_MATRIX_SET_LIMITS_TAG)
+            if set_limits_elements:
+                raise ValueError('Multiple instances of TileMatrixSet'
+                                  ' plus TileMatrixSetLimits in %s' %
+                                  link_element)
+            for matrix_set_element in matrix_set_elements:
+                uri = matrix_set_element.text.strip()
+                links.append(TileMatrixSetLink(uri))
+        else:
+            uri = matrix_set_elements[0].text.strip()
+
+            tilematrixlimits = {}
+            path = '%s/%s' % (_TILE_MATRIX_SET_LIMITS_TAG,
+                              _TILE_MATRIX_LIMITS_TAG)
+            for limits_element in link_element.findall(path):
+                tml = TileMatrixLimits(limits_element)
+                if tml.tilematrix:
+                    tilematrixlimits[tml.tilematrix] = tml
+
+            links.append(TileMatrixSetLink(uri, tilematrixlimits))
+    return links
+
+#TileMatrixSetLink.from_elements = custom_from_elements
 
