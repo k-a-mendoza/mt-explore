@@ -8,24 +8,20 @@ class SelectionController(ControllerInterface):
     def _key_press_event(self, event):
 
         if event.key=='i':
-            self.model.update_selection(1)
-            self.remap()
-        elif event.key=='I':
-            self.model.update_cycle_selection(1)
+            self.model.update_selection(True)
             self.remap()
         elif event.key=='o':
-            self.model.update_selection(0)
+            self.model.update_selection(False)
             self.remap()
-        elif event.key=='O':
-            self.model.update_cycle_selection(0)
-            self.remap()
+        elif event.key=='x':
+            self.model.save_selection()
 
         elif event.key=='h':
             title = "include/exclude Functionality"
             functionality = {
                 'include selected station': 'press i',
                 'exclude selected station': 'press o',
-                'hold shift to apply en-batch':'press \'shift\''
+                'save selected stations': 'press x'
             }
             self.create_help_menu_string(title, functionality)
 

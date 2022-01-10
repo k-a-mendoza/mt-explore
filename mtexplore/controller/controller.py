@@ -1,5 +1,4 @@
 from .map_controller import MapController
-from .cycle_controller import CycleController
 from .save_controller import SaveController
 from .scroll_controller import ScrollController
 from ..view.view import MainView
@@ -22,9 +21,8 @@ class MainController:
         self.controller = ScrollController(
                             SelectionController(
                                 SaveController(
-                                    CycleController(
                                         MapController(
-                                            ControllerBase())))))
+                                            ControllerBase()))))
 
     def bind_to_mlp(self):
         self.fig.canvas.mpl_connect('scroll_event', self.fig._scroll_event_for_mtpy)
