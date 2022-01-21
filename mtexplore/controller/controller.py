@@ -8,16 +8,8 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
 class MainController:
-    dimensions = (15,10)
     def __init__(self):
         self._print_default_bindings()
-        self.fig = plt.figure(figsize=self.dimensions)
-
-        self.bind_methods()
-
-        self.bind_to_mlp()
-
-        self.fig.show()
         self.controller = ScrollController(
                             SelectionController(
                                 SaveController(
@@ -46,7 +38,9 @@ class MainController:
 
     def add_view_base(self, view: MainView):
         self.view = view
-        self.view.set_figure(self.fig)
+        self.fig = view.get_figure()
+        self.bind_methods()
+        self.bind_to_mlp()
         self.controller.connect_view(view.get_view())
 
     def start(self):

@@ -12,7 +12,7 @@ import collections
 from owslib.wmts import TileMatrixSetLink, TileMatrixLimits, _TILE_MATRIX_SET_TAG, _TILE_MATRIX_SET_LIMITS_TAG, _TILE_MATRIX_LIMITS_TAG
 
 class MapView(ViewContract):
-    map_position=[0.05,0.5,0.45,0.4]
+    map_position=[0.1,0.55,0.4,0.4]
     base_extent   = [-130,-100,20,50]
     _colormap = colormap.get_cmap('nipy_spectral')
 
@@ -20,7 +20,7 @@ class MapView(ViewContract):
     s2 = 50
     s3 = 50
     lw = 0.8
-    _legend_kwargs = dict(ncol=5,loc='lower left',fontsize=7)
+    _legend_kwargs = dict(ncol=5,loc='lower left',fontsize=7,columnspacing=0.1)
     _none_color='none'
     _include='green'
     _exclude='red'
@@ -76,9 +76,9 @@ class MapView(ViewContract):
         url = 'https://map1c.vis.earthdata.nasa.gov/wmts-geo/wmts.cgi'
         layer = 'ASTER_GDEM_Color_Shaded_Relief'
         self.ax.add_wmts(url, layer,alpha=0.8)
-        self.ax.coastlines(resolution='50m',zorder=10)
-        self.ax.add_feature(states_provinces, edgecolor='black',zorder=2,linewidth=1.5)
-        self.ax.add_feature(countries, edgecolor='black', zorder=2, linewidth=2)
+        self.ax.coastlines(resolution='50m',zorder=2)
+        self.ax.add_feature(states_provinces, edgecolor='black',zorder=1,linewidth=1.5)
+        self.ax.add_feature(countries, edgecolor='black', zorder=1, linewidth=2)
 
    
     def _update_selection(self,station_data):
@@ -196,9 +196,9 @@ class MapView(ViewContract):
             self.ax.set_ylim([y_down,y_up])
 
     def _set_default_df(self, df):
-        self.prep_legend(df)
         self.plot_scatter(df)
         self.set_default_extent(df)
+        self.prep_legend(df)
 
     def _zoom(self,**kwargs):
         self._update_map_extent(**kwargs)

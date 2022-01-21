@@ -21,8 +21,8 @@ class MainView:
         self.view.configure()
         self.view.update()
 
-    def set_figure(self,fig):
-        self.view.set_figure(fig)
+    def get_figure(self):
+        return self.view.get_figure()
 
     def finish(self):
         self.view.finish()

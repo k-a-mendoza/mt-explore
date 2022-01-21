@@ -1,10 +1,10 @@
+
 from mtexplore import Mt_Ex_Main
 import sys
 import pandas as pd
 import os
-sys.path.append(os.path.join('/home','kevin','Desktop','thesis work','python','egi_utils_remote','egi_utils'))
 import egi_utils.h5mt as h5mt
-#%%
+
 class PandasFacade:
     
     
@@ -21,8 +21,10 @@ class PandasFacade:
     
     def get_mt_object(self,project, station):
         return None
-    
-actual_database   = h5mt.H5MTExperiment('../../../Database/Organized_TFs/western_us_experiment')
+
+actual_database   = h5mt.H5MTExperiment('../betadatabase_tfs/western_us_experiment')
+#%%
+"""
 all_locations = PandasFacade('../../../../thesis work/python/Western_US_Mesh/locations/'+\
                                  'dataless_site_locations.csv')
     
@@ -32,8 +34,7 @@ all_locations = PandasFacade('../../../../thesis work/python/Western_US_Mesh/loc
     
 ks_ta = PandasFacade('../../../../thesis work/python/Western_US_Mesh/locations/TA Stations'+\
                                  '/ks_ta_stations_cleaned.csv')
-
-    #%%
+"""
 # try this
 main_app = Mt_Ex_Main()
 #main_app.connect_database(ks_ta)
@@ -41,4 +42,3 @@ main_app.connect_database(actual_database)
 #main_app.connect_database(all_locations)
 #main_app.connect_database(spline_control)
 #main_app.connect_selection('../../../../thesis work/python/Western_US_Mesh/notebook_7/off_transect_stations.csv')
-#%%

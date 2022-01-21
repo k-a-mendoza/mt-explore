@@ -1,6 +1,3 @@
-import os
-import sys
-sys.path.append(os.getcwd()+os.sep +'mtexplore')
 from .model.modelcontroller import ModelController
 from .view.view import MainView
 from .controller.controller import MainController

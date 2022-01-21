@@ -5,72 +5,44 @@ from matplotlib.ticker import ScalarFormatter, LogFormatterExponent
 import collections
 
 class MTView(ViewContract):
-    app_res_position = [0.6, 0.5, 0.35, 0.4]
-    phase_position   = [0.6, 0.25, 0.35, 0.15]
-    induction_position  = [0.1, 0.25, 0.40,0.15]
-    tipper_position  = [0.6, 0.05, 0.35,0.15]
-    weight_position  = [0.1, 0.05, 0.40,0.15]
 
     def __init__(self,view):
         super().__init__(view)
-        self.app_res = AppResView()
-        self.phase   = PhaseView()
-        self.induction  = InductionView()
-        self.tipper  = TipperView()
-        self.weights = WeightsView()
+        self._views = (AppResView(), PhaseView(), InductionView(), 
+                       TipperView(), WeightsView())
 
     def _update_selection(self,mt_obj,**kwargs):
         mt_obj = mt_obj['mt obj']
         if mt_obj is None:
-            self.phase._clean()
-            self.app_res._clean()
-            self.induction._clean()
-            self.weights._clean()
+            for view in self._views:
+                view._clean()
         else:
             z_angles      = mt_obj.Z.rotation_angle
             tipper_angles = mt_obj.Tipper.rotation_angle
             mt_obj.Z.rotate(-z_angles)
             mt_obj.Tipper.rotate(-tipper_angles)
-
-            self.phase.update(mt_obj)
-            self.app_res.update(mt_obj)
-            self.tipper.update(mt_obj)
-            self.induction.update(mt_obj)
-            self.weights.update(mt_obj)
+            for view in self._views:
+                view.update(mt_obj)
             self.ax.set_xlim([1e-3, 1e5])
 
     def _is_in_axes(self, event):
-        if event.inaxes==self.app_res.ax:
-            return 'res'
-        elif event.inaxes==self.phase.ax:
-            return 'phase'
-        elif event.inaxes==self.tipper.ax:
-            return 'tipper'
-        elif event.inaxes==self.weights.ax:
-            return 'weights'
-        elif event.inaxes==self.induction.ax:
-            return 'induction'
-        else:
-            return None
+        for view in self._views:
+            if event.inaxes==view.ax:
+                return view.type
+        return None
 
 
     def _configure(self):
-        ax1=self.add_axes(self.app_res_position,label='app_res')
-        ax2=self.add_axes(self.phase_position,label='phase')
-        ax3=self.add_axes(self.induction_position,label='induction')
-        ax4=self.add_axes(self.weight_position,label='weights')
-        ax5=self.add_axes(self.tipper_position,label='tipper')
-        ax1.get_shared_x_axes().join(ax1,ax2,ax4)
-        ax1.set_xlim([1e-3, 1e5])
-        ax1.set_xscale('log')
-        ax1.tick_params(axis='x', which='major',  length=10, grid_linewidth=3,grid_linestyle='-')
-        ax1.tick_params(axis='x', which='minor', length=7, grid_linewidth=3, grid_linestyle='--')
-        self.ax=ax1
-        self.app_res.configure(ax1)
-        self.phase.configure(ax2)
-        self.tipper.configure(ax5)
-        self.weights.configure(ax4)
-        self.induction.configure(ax3)
+        axes = [self.add_axes(x.position,label=x.type) for x in self._views]
+        axes[0].get_shared_x_axes().join(*axes)
+        axes[0].set_xlim([1e-3, 1e5])
+        axes[0].set_xscale('log')
+        axes[0].tick_params(axis='x', which='major',  length=10, grid_linewidth=3,grid_linestyle='-')
+        axes[0].tick_params(axis='x', which='minor', length=7, grid_linewidth=3, grid_linestyle='--')
+        self.ax = axes[0]
+        for ax, view in zip(axes,self._views):
+            view.configure(ax)
+        
 
        
 
@@ -114,22 +86,26 @@ class _Format():
             self.plot=[]
 
 class PhaseView(_Format):
+    position   = [0.6, 0.08, 0.35, 0.42]
+   
     fontsize = 12
     weight = 'bold'
+    type = 'phase'
     def __init__(self):
         super().__init__()
         self.plot = []
         self.legend = False
 
     def configure(self,axes):
-        axes.set_ylim([-180,180])
         axes.set_yticks(np.arange(-180,180+45,45))
-        axes.set_ylabel('Apparent Phase',fontsize=self.fontsize,weight=self.weight)
         axes.set_xlabel('Period', fontsize=self.fontsize, weight=self.weight)
+        axes.set_ylabel(r'Impedance $\phi$ (deg)',fontsize=self.fontsize,weight=self.weight)
         axes.xaxis.grid(True,linewidth=1,which='both',color='black')
         axes.plot([1e-2,1e6],[1,1],color='orange',linestyle='--')
-        ticks = np.arange(-180,180+45,45)
+        
         self.ax =axes
+        self.ax.set_aspect(1/66)
+        self.ax.set_adjustable('datalim')
 
     def update(self,mt_obj,*args,**kwargs):
         self._clean()
@@ -181,9 +157,11 @@ class PhaseView(_Format):
         
 
 class AppResView(_Format):
+    position = [0.6, 0.55, 0.35, 0.4]
     fontsize = 12
+    adjustment_constant = 1#(5/(8*(np.pi**2)*1e-7))
     weight ='bold'
-
+    type = 'res'
     def __init__(self):
         super().__init__()
         self.plot=[]
@@ -191,13 +169,13 @@ class AppResView(_Format):
 
     def configure(self, axes):
         axes.yaxis.set_major_formatter(ScalarFormatter())
-        axes.set_ylim([1e-1,2e4])
         axes.set_yscale('log')
-        axes.set_ylabel('Apparent Resistivity',fontsize=self.fontsize,weight=self.weight)
+        axes.set_ylabel(r'App Res $\Omega \cdot m $',fontsize=self.fontsize,weight=self.weight)
         axes.tick_params(axis='both',length=10,grid_linewidth=3)
         axes.tick_params(axis='y', which='minor', length=7, grid_linewidth=0.5, grid_linestyle='--')
         axes.grid(True,linewidth=1,which='both',color='black')
         self.ax = axes
+        self.ax.axis('equal')
 
     def update(self,mt_obj,*args,**kwargs):
         self._clean()
@@ -206,25 +184,26 @@ class AppResView(_Format):
         res_xx,     res_yy,     res_xy,     res_yx     = mt_obj.Z.res_xx, mt_obj.Z.res_yy, mt_obj.Z.res_xy, mt_obj.Z.res_yx
         res_xx_err, res_yy_err, res_xy_err, res_yx_err = mt_obj.Z.res_err_xx, mt_obj.Z.res_err_yy, mt_obj.Z.res_err_xy, mt_obj.Z.res_err_yx
 
-        max_yval =  get_max_value(res_xx, res_yy, res_xy, res_yx)
-        min_yval = -get_max_value(-res_xx, -res_yy, -res_xy, -res_yx)
-        self.ax.set_ylim([log_cast(0.1,min_yval),log_cast(10,max_yval)])
+        max_yval =  get_max_value(res_xx, res_yy, res_xy, res_yx)*self.adjustment_constant
+        min_yval = -get_max_value(-res_xx, -res_yy, -res_xy, -res_yx)*self.adjustment_constant
+        self.ax.set_ylim([log_cast(0.1,min_yval),
+                          log_cast(10,max_yval)])
         self.ax.set_title(mt_obj.station)
 
         
-        self.plot_series(periods, res_yx, res_yx_err,
+        self.plot_series(periods, res_yx*self.adjustment_constant, res_yx_err,
                          self.yx_marker, self.yx_color,
                          self.yx_color, self.yx_color, self.yx_ls,r'$\rho_{yx}$')
 
-        self.plot_series(periods, res_xy, res_xy_err,
+        self.plot_series(periods, res_xy*self.adjustment_constant, res_xy_err,
                          self.xy_marker, self.xy_color,
                          self.xy_color, self.xy_color, self.xy_ls,r'$\rho_{xy}$')
 
-        self.plot_series(periods, res_yy, res_yy_err,
+        self.plot_series(periods, res_yy*self.adjustment_constant, res_yy_err,
                          self.yy_marker, self.yy_color,
                          self.yy_color, self.yy_color, self.yy_ls,r'$\rho_{yy}$')
         
-        self.plot_series(periods, res_xx, res_xx_err,
+        self.plot_series(periods, res_xx*self.adjustment_constant, res_xx_err,
                          self.xy_marker,self.xx_color,
                          self.xx_color,self.xx_color,self.xx_ls,r'$\rho_{xx}$')
 
@@ -251,6 +230,7 @@ class AppResView(_Format):
         self.plot.append(plot_obj)
     
 class InductionView(_Format):
+    position  = [0.1, 0.42, 0.40,0.13]
     fontsize = 12
     weight ='bold'
     arrow_lw =0.7
@@ -259,6 +239,7 @@ class InductionView(_Format):
     head_width = 0.01
     head_length = 0.03
     length_includes_head=False
+    type = 'induction'
     def __init__(self):
         super().__init__()
         self.plot=[]
@@ -272,6 +253,12 @@ class InductionView(_Format):
         axes.tick_params(axis='y', which='minor', length=7, grid_linewidth=0.5, grid_linestyle='--')
         axes.grid(True,linewidth=1,which='both',color='black')
         self.ax = axes
+        self.axt = axes.twiny()
+        self.axt.set_xlim([-3,5])
+        self.axt.set_xlim([-3,5])
+        self.axt.set_ylim([-1,1])
+        self.axt.axis(False)
+        self.axt.set_xscale('linear')
 
     def update(self,mt_obj,*args,**kwargs):
         self._clean()
@@ -290,14 +277,14 @@ class InductionView(_Format):
       
         offset_decade  = np.asarray([-3,5])
         self.ax.set_ylim([-0.5,0.5])
-        self.ax.set_xlim(offset_decade)
+        self.ax.set_xlim([1e-3,1e5])
         
      
         self.plot_series(periods, txr, tyr, label='real',color=self.facecolor_real)
         self.plot_series(periods, txi, tyi, label='imag',color=self.facecolor_imag)
         
         if  self.legend:
-            self.legend=self.ax.legend(loc='upper left')
+            self.legend=self.axt.legend(loc='upper left')
             self.legend=False
         
     def plot_series(self, periods, dx, dy, color, label):
@@ -323,18 +310,20 @@ class InductionView(_Format):
         None.
 
         """
-        quiver_obj=self.ax.quiver(periods,np.zeros(periods.shape),dy,dx,label=label,angles='xy',
+        quiver_obj=self.axt.quiver(periods,np.zeros(periods.shape),dy,dx,label=label,angles='xy',
                       color=color,headwidth=self.head_width,headlength=self.head_length)
         self.plot.append(quiver_obj)
         
         
 class TipperView(_Format):
+    position  = [0.1, 0.25, 0.40,0.12]
     fontsize = 12
     weight ='bold'
     kxr_color = 'crimson'
     kxi_color = 'crimson'
     kyr_color = 'blue'
     kyi_color = 'blue'
+    type='tipper'
     def __init__(self):
         super().__init__()
         self.plot=[]
@@ -374,7 +363,7 @@ class TipperView(_Format):
                                           label='kyi',marker=self.xx_marker,markerfacecolor='none'))
         
         if  self.legend:
-            self.legend=self.ax.legend(loc='upper left')
+            self.legend=self.ax.legend(loc='center left')
             self.legend=False
         
    
@@ -382,9 +371,10 @@ class TipperView(_Format):
     
     
 class WeightsView(_Format):
+    position  = [0.1, 0.08, 0.4,0.12]
     fontsize = 12
     weight ='bold'
-
+    type='weights'
     def __init__(self):
         super().__init__()
         self.plot=[]
@@ -393,6 +383,7 @@ class WeightsView(_Format):
         axes.yaxis.set_major_formatter(ScalarFormatter())
         axes.set_ylim([-0.5,2])
         axes.set_ylabel('Weights',fontsize=self.fontsize,weight=self.weight)
+        axes.set_xlabel('Period', fontsize=self.fontsize, weight=self.weight)
         axes.tick_params(axis='both',length=10,grid_linewidth=3)
         axes.tick_params(axis='y', which='minor', length=7, grid_linewidth=0.5, grid_linestyle='--')
         axes.grid(True,linewidth=1,which='both',color='black')

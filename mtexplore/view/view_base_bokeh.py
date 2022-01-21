@@ -1,4 +1,6 @@
-import matplotlib.pyplot as plt
+# -*- coding: utf-8 -*-
+from bokeh.plotting import figure, show
+
 import pandas as pd
 
 class ViewContract:
@@ -36,9 +38,11 @@ class ViewContract:
         self._update_selection(series)
         self.view.update_selection(series)
 
-    def get_figure(self) -> plt.Figure:
+    def get_figure(self): 
         return self.view.get_figure()
 
+    def set_figure(self,fig):
+        self.view.set_figure(fig)
 
     def configure(self):
         self.view.configure()
@@ -115,7 +119,7 @@ class BaseView(ViewContract):
         pass
 
     def update(self):
-        self.fig.canvas.draw_idle()
+        self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
     def add_axes(self, *args, **kwargs):
@@ -135,7 +139,6 @@ class BaseView(ViewContract):
         self.fig.canvas.draw()
 
     def update_selection(self, series):
-        print('updating')
         self.update()
 
     def get_axes_of_click(self, event):
