@@ -159,7 +159,7 @@ class PhaseView(_Format):
 class AppResView(_Format):
     position = [0.6, 0.55, 0.35, 0.4]
     fontsize = 12
-    adjustment_constant = 1#(5/(8*(np.pi**2)*1e-7))
+    adjustment_constant = 1#5/(8*(np.pi**2)*1e-7)
     weight ='bold'
     type = 'res'
     def __init__(self):
@@ -209,7 +209,7 @@ class AppResView(_Format):
 
 
         if not self.legend:
-            self.legend=self.ax.legend(loc='upper right',ncol=2)
+            self.legend=self.ax.legend(loc='upper center',ncol=4)
 
     def plot_series(self, periods, res_xx, res_xx_err,
                             marker, mec, color, ecolor, ls, label):
