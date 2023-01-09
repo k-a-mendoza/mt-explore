@@ -22,16 +22,16 @@ class PandasFacade:
     def get_mt_object(self,project, station):
         return None
     
-actual_database   = h5mt.H5MTExperiment('../../../Database/Organized_TFs/western_us_experiment')
-all_locations = PandasFacade('../../../../thesis work/python/Western_US_Mesh/locations/'+\
-                                 'dataless_site_locations.csv')
+actual_database   = h5mt.H5MTExperiment('../../abetadatabase/transfer_functions/Database/Organized_TFs/western_us_experiment')
+#all_locations = PandasFacade('../../../../thesis work/python/Western_US_Mesh/locations/'+\
+ #                                'dataless_site_locations.csv')
     
 # alternate spline control = 'starting_data/spline_control_points.csv'
 #spline_control = PandasFacade('../../../../thesis work/python/Western_US_Mesh/starting_data/'+\
 #                                 'new_cleaned_spline_control_points.csv',project_override='spline control')
     
-ks_ta = PandasFacade('../../../../thesis work/python/Western_US_Mesh/locations/TA Stations'+\
-                                 '/ks_ta_stations_cleaned.csv')
+#ks_ta = PandasFacade('../../../../thesis work/python/Western_US_Mesh/locations/TA Stations'+\
+#                                 '/ks_ta_stations_cleaned.csv')
 
     #%%
 # try this

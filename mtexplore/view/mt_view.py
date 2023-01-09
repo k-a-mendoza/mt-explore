@@ -402,6 +402,7 @@ class WeightsView(_Format):
         self._clean()
         periods = 1/mt_obj.Z.freq
         if hasattr(mt_obj,'Weights'):
+            print('has weights')
             impedance_stdvs =  np.copy(mt_obj.Weights.impedance_weights)
             impedance_stdvs[impedance_stdvs==-1]=mt_obj.Weights.impedance_ceiling
             
@@ -420,6 +421,7 @@ class WeightsView(_Format):
             self.plot.append(self.ax.plot(period_range,mt_obj.Weights.tipper_floor*ones,
                                           ls=':',color='darkorange',label='K Floor'))
         else:
+            print('printing stdevs')
             impedance_stdvs = mt_obj.Z.z_err
             tipper_stdvs    = mt_obj.Tipper.tipper_err
             max_val = np.amax(impedance_stdvs)
