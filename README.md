@@ -81,11 +81,6 @@ def get_df(self):
 
 Then, after creating your object, import an Mt_Ex_Main() object and feed it your database object.
 
-dummy_database = DummyClass('TA Stations/ks_ta_stations_cleaned.csv')
-main_app = Mt_Ex_Main()
-main_app.connect_database(dummy_database)
-
-These 
 
 ```python
 from mtexplore import Mt_Ex_Main
