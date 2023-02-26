@@ -10,11 +10,14 @@ class SelectionController(ControllerInterface):
         if event.key=='i':
             self.model.update_selection(True)
             self.remap()
+            
         elif event.key=='o':
             self.model.update_selection(False)
             self.remap()
-        elif event.key=='x':
-            self.model.save_selection()
+        elif event.key=='n':
+            selection = self.model.get_cycler_selection()
+            self.view.update_selection(selection)
+            self.model.next_selection()
 
         elif event.key=='h':
             title = "include/exclude Functionality"

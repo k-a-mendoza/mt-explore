@@ -3,6 +3,12 @@ import pandas as  pd
 from mtpy.core import mt
 import numpy as np
 import os
+import matplotlib.colors as mplcolors
+import matplotlib.cm as mplcolormap
+
+def get_hexmap(fraction):
+    rgb = mplcolormap.get_cmap('nipy_spectral')(fraction)
+    return mplcolors.to_hex(rgb)
 
 def absolute_path(main_directory,row):
     if row['filepath']=='':
@@ -32,8 +38,27 @@ def clean_incoming_files_and_create_df(filepath):
 
     return df
 
+class SelectionCycler:
+
+    def __init__(self, metadata_df, lat_0, lat_1, lon_0, lon_1):
+        self.selection_index = 0
+        self.sub_df = metadata_df[(metadata_df.latitude>lat_0) & (metadata_df.latitude<lat_1) &\
+                             (metadata_df.longitude>lon_0) & (metadata_df.longitude<lon_1)].copy()
+        self.sub_df.reset_index(names=['global_index'],inplace=True)
+        self.sub_df=self.sub_df['global_index']
+
+    def get_selection(self):
+        return self.sub_df.iloc[[self.selection_index]].values[0]
+
+    def next_index(self):
+        self.selection_index+=1
+        if self.selection_index>=len(self.sub_df):
+            self.selection_index=0
+            
+            
+            
 class DatabaseModel:
-    _columns= ['latitude','longitude','station','project','include']
+    _columns= ['latitude','longitude','station','project','include','project_color']
 
     click_precision=0.05
 
@@ -44,6 +69,9 @@ class DatabaseModel:
         self._databases          = []
         self._mtexplore_metadata = None
 
+    def create_cycler(self,lat_0, lat_1, lon_0, lon_1):
+        self._selection_cycler = SelectionCycler(self._mtexplore_metadata,lat_0, lat_1, lon_0, lon_1)
+
     def add_database(self,database):
         self._databases.append(database)
         new_df = database.get_df()
@@ -53,6 +81,11 @@ class DatabaseModel:
                                                  ignore_index=True)
         else:
             self._mtexplore_metadata = new_df
+
+        df_project = self._mtexplore_metadata['project'].unique()
+        colors     = [get_hexmap(ix / len(df_project)) for ix in range(len(df_project))]
+        for project, color in zip(df_project, colors):
+            self._mtexplore_metadata.loc[self._mtexplore_metadata['project'] == project, 'project_color'] = color
 
     def get_mapping_data(self):
         """
@@ -65,7 +98,7 @@ class DatabaseModel:
         if self._mtexplore_metadata is not None:
             subframe =  self._mtexplore_metadata.copy(deep=True)
             return subframe
-        return pd.DataFrame(columns=['latitude', 'longitude', 'project','station', 'include'])
+        return pd.DataFrame(columns=self._columns)
 
     def get_included_stations(self):
         df = self._mtexplore_metadata.copy(deep=True)
@@ -106,17 +139,36 @@ class DatabaseModel:
         if len(target_frame)==0:
             return None
         else:
-            project = target_frame['project'].values[0]
-            station = target_frame['station'].values[0]
+            if isinstance(target_frame['project'],str):
+                project = target_frame['project']
+                station = target_frame['station']
+            else:   
+                project = target_frame['project'].values[0]
+                station = target_frame['station'].values[0]
             for database in self._databases:
-                mt_object = database.get_mt_object(project,station)
+                mt_object = database.get_record(project, station,type='mtpy')
                 if mt_object is not None:
                     break
             return mt_object
 
         
     def update_selection(self,frame,value):
+        print(frame)
+        print(value)
+        print(frame.index)
         self._mtexplore_metadata.at[frame.index[0], 'include']= value
+
+    def next_cycler_selection(self):
+        if self._selection_cycler is not None:
+            self._selection_cycler.next_index()
+            
+    def get_cycler_row(self):
+        if self._selection_cycler is not None:
+            index = self._selection_cycler.get_selection()
+            return self._mtexplore_metadata.iloc[[index]]
+        else:
+            return None
+
         
     
        

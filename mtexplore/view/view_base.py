@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+import time
 
 class ViewContract:
 
@@ -136,6 +137,7 @@ class BaseView(ViewContract):
         pass
 
     def finish(self):
+        self.fig.tight_layout()
         self.fig.canvas.draw()
 
     def update_selection(self, series):

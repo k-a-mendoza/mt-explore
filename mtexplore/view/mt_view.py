@@ -8,7 +8,7 @@ class MTView(ViewContract):
     app_res_position = [0.6, 0.5, 0.35, 0.4]
     phase_position   = [0.6, 0.25, 0.35, 0.15]
     induction_position  = [0.1, 0.25, 0.40,0.15]
-    tipper_position  = [0.6, 0.05, 0.35,0.15]
+    tipper_position  = [0.6, 0.05, 0.35,0.1]
     weight_position  = [0.1, 0.05, 0.40,0.15]
 
     def __init__(self,view):
@@ -20,17 +20,13 @@ class MTView(ViewContract):
         self.weights = WeightsView()
 
     def _update_selection(self,mt_obj,**kwargs):
-        mt_obj = mt_obj['mt obj']
+        mt_obj = mt_obj['mt_data']
         if mt_obj is None:
             self.phase._clean()
             self.app_res._clean()
             self.induction._clean()
             self.weights._clean()
         else:
-            z_angles      = mt_obj.Z.rotation_angle
-            tipper_angles = mt_obj.Tipper.rotation_angle
-            mt_obj.Z.rotate(-z_angles)
-            mt_obj.Tipper.rotate(-tipper_angles)
 
             self.phase.update(mt_obj)
             self.app_res.update(mt_obj)

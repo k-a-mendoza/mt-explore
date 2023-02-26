@@ -1,4 +1,5 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[!Downloads](https://img.shields.io/pypi/dm/mtexplore)
 
 
 ![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/social_card_modified.png)
@@ -32,16 +33,72 @@ pip install mtexplore
 
 ## Usage
 
-First, create an Mt_Ex_Main Object and link it with your local .edi database directory.
+
+
+First, create a database object. Your database object must implement a ```get_df()``` and a ```get_record()``` method with the following specifications
+```python
+def get_record(self,project : str,station : str,type : str = 'mtpy'):
+    """
+    returns an mtpy object given a project and station string code
+    
+    Parameters
+    ==========
+    
+    project : str
+    
+        the desired project code of the queried station
+    
+    station : str
+        the desired station string
+        
+    type : str
+        the type of object to yield. mt-explore will assign this variable 'mtpy', 
+        so make sure any interface that depends on the ExampleDatabaseInterface
+        can take these arguments
+        
+    Returns
+    =======
+    mtpy_obj : MT
+        an mtpy.core.MT object representing the project and station desired
+    
+    """
+    pass
+
+def get_df(self):
+    """
+    returns a pandas dataframe representation of the databases's station data
+    
+    Returns
+    =======
+    dataframe : pd.DataFrame
+        a pandas dataframe with columns:
+            station, project, latitude, longitude
+        must also have a sensible .index
+    
+    """
+    pass
+```
+
+Then, after creating your object, import an Mt_Ex_Main() object and feed it your database object.
+
+dummy_database = DummyClass('TA Stations/ks_ta_stations_cleaned.csv')
+main_app = Mt_Ex_Main()
+main_app.connect_database(dummy_database)
+
+These 
 
 ```python
 from mtexplore import Mt_Ex_Main
 
+database = MyDatabaseObject('TA Stations/ks_ta_stations_cleaned.csv')
 main_app = Mt_Ex_Main()
-main_app.connect_database('MT Data/')
+main_app.connect_database(database)
 
 ```
-![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/ex.png)
+
+Thats it!
+
+![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/example.png)
 
 You should see a window pop up with a map view and associated phase/apparent resistivity plot. It is possible to interact with the data using the mouse or specific keys. For a full list of commands press 'h'
 

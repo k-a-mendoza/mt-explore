@@ -20,7 +20,8 @@ class MapView(ViewContract):
     s2 = 50
     s3 = 50
     lw = 0.8
-    _legend_kwargs = dict(ncol=5,loc='lower left',fontsize=7)
+    _legend_kwargs = dict(ncol=5,loc='lower left',fontsize=7,
+                          handletextpad=0.25,columnspacing=1)
     _none_color='none'
     _include='green'
     _exclude='red'
@@ -65,10 +66,6 @@ class MapView(ViewContract):
         self.base_scale = 1.2
         self.gl = None
 
-    def colormap(self,val):
-        rgb = self._colormap(val)
-        return mplcolors.to_hex(rgb)
-
     def _configure(self):
         self.ax = self.add_axes(self.map_position,projection=ccrs.PlateCarree())
         states_provinces = cfeature.NaturalEarthFeature(**self._state_feature)
@@ -80,16 +77,20 @@ class MapView(ViewContract):
         self.ax.add_feature(states_provinces, edgecolor='black',zorder=2,linewidth=1.5)
         self.ax.add_feature(countries, edgecolor='black', zorder=2, linewidth=2)
 
-   
+
     def _update_selection(self,station_data):
         if self.selection_handle is not None:
             self._erase_selection()
-        if station_data['project'] is None:
+        if station_data['map_data'] is None:
             return None
-        
-        df = station_data['project']
-        project = df['project'].values[0]
-        station     = df['station'].values[0]
+
+        df = station_data['map_data']
+        if isinstance(df['project'],str):
+            project = df['project']
+            station = df['station']
+        else:
+            project = df['project'].values[0]
+            station = df['station'].values[0]
 
         self.selection_handle = self.ax.scatter(df['longitude'],
                                                 df['latitude'],**self._selection_kwargs)
@@ -113,7 +114,7 @@ class MapView(ViewContract):
             handle.remove()
             del handle
         self.scatter_handle=[]
-        
+
     def _erase_scatter_selection(self):
         if self.selected_scatter_handle is not None:
             self.selected_scatter_handle.remove()
@@ -124,7 +125,7 @@ class MapView(ViewContract):
         if event.inaxes == self.ax:
             return 'map'
         return None
-    
+
     def _map(self,df):
         self.plot_include(df)
 
@@ -133,18 +134,17 @@ class MapView(ViewContract):
         if not df.empty:
             df = self.assign_project_colors(df)
             self._erase_scatter()
-                
-            self.ax.scatter(df['longitude'],df['latitude'],
-                                                c=df['color'],**self._scatter_kwargs_data)
 
-            
-            
+            self.ax.scatter(df['longitude'],df['latitude'],
+                                                c=df['project_color'],**self._scatter_kwargs_data)
+
     def plot_include(self,df):
         if not df.empty:
+            print('drawing include')
             self._erase_scatter_selection()
             df = df[df.include]
             self.ax.scatter(df['longitude'],df['latitude'],**self._include_kwargs)
-            
+
 
     def _get_extent(self):
         ylim = self.ax.get_ylim()
@@ -152,29 +152,23 @@ class MapView(ViewContract):
         return (xlim, ylim)
 
     def assign_project_colors(self,df):
-        df_project = df['project'].unique()
-        color_dict = {}
-        for ix, project in enumerate(df_project):
-            color_dict[project]= self.colormap(ix/len(df_project))
-
-        for key,value in color_dict.items():
-            df.at[df['project']==key,'color']=value
-        df.at[df['include'] == 0, 'qual color'] = self._none_color
-        df.at[df['include'] == 1, 'qual color'] = self._include
+        df.loc[df['include'] == 0, 'qual color'] = self._none_color
+        df.loc[df['include'] == 1, 'qual color'] = self._include
         return df
 
     def prep_legend(self,df):
-        items = list(df['project'].unique())
+        projects = list(df['project'].unique())
         if self.legend is not None:
             self.legend.remove()
         handles=[]
-        for ix, project in enumerate(items):
-            color = self.colormap(ix / len(items))
-            handle = self.ax.scatter([], [], label=project, c=color, edgecolors='none', s=self.s1,linewidths=self.lw)
+        for project in projects:
+            color = df[df.project == project]['project_color'].values[0]
+            handle = self.ax.scatter([], [], label=project, c=color, edgecolors='none',
+                                     s=self.s1,linewidths=self.lw)
             handles.append(handle)
 
-       
-        self.legend=self.ax.legend(handles,items,**self._legend_kwargs)
+
+        self.legend=self.ax.legend(handles, projects, **self._legend_kwargs)
 
     def set_default_extent(self,df):
         extent = [None,None,None,None]
@@ -219,16 +213,17 @@ class MapView(ViewContract):
         else:
             # deal with something that should never happen
             scale_factor = 1
-          
+
         # set new limits
         self.ax.set_xlim([xdata - cur_xrange*scale_factor,
                      xdata + cur_xrange*scale_factor])
         self.ax.set_ylim([ydata - cur_yrange*scale_factor,
                      ydata + cur_yrange*scale_factor])
-  
+
 
 
     def get_xyq_values_for_project(self, stations, project):
+        return None
         x_values = []
         y_values = []
         q_values = []
@@ -239,6 +234,7 @@ class MapView(ViewContract):
         return x_values, y_values, q_values
 
     def get_color_value(self,value):
+        return None
         if value is None:
             return self._none_color
         elif value=='1':
@@ -279,4 +275,3 @@ def custom_from_elements(link_elements):
     return links
 
 #TileMatrixSetLink.from_elements = custom_from_elements
-
