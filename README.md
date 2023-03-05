@@ -3,6 +3,8 @@
 
 ![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/social_card_modified.png)
 
+![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/example.png)
+
 MT-Explore is a GUI meant to assist in the compilation of magnetotelluric datasets for inversion purposes.
 
 
@@ -91,8 +93,6 @@ main_app.connect_database(database)
 ```
 
 Thats it!
-
-![Mt-Explore](https://github.com/El-minadero/mt-explore/blob/master/images/example.png)
 
 You should see a window pop up with a map view and associated phase/apparent resistivity plot. It is possible to interact with the data using the mouse or specific keys. For a full list of commands press 'h'
 
